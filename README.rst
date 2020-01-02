@@ -3,13 +3,13 @@ search
 ======
 
 
-Add a short description here!
+search contains and runs several different search algorithms on desired problems/domains
 
 
 Description
 ===========
 
-A longer description of your project goes here...
+Module is runnable via the __main__.py file in src, given a hardcoded config file which details domain, algorithms, heuristics, and problems. Results are to be saved to the logs folder.
 
 
 Note
