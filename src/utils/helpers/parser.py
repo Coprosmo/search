@@ -9,45 +9,65 @@ config file.
 """
 
 import configparser
+import random
+import json
+from ..datastructures.config import Config
 
-__all__ = ['parse']
+__all__ = ['parse_config']
 
-required_fields = ['search_alg',
-                   'domain',
-                   'initial']
+required_fields = ['domain',
+                   'algs',]
 
-defaults = {'cost': 'unit',
-            'fw_heuristic': 'None',
-            'bw_heuristic': 'None',}
+defaults = {'seed': random.random(),
+            'param': None,
+            'partial_expansion': False
+            }
 
 
-def parse(config_file):
-    """Parses an INI config file.
+def _jsonload(parser, sect, item):
+    return json.loads(parser.get(sect, item))
 
-    Allows for certain defaults, and has required fields.
 
-    Args:
-        config_file: path to desired config file.
-
-    Returns:
-        A dict containing all key-value pairs from config file.
-
-    Raises:
-        Exception if any required fields are missing.
-    """
-
-    config = configparser.ConfigParser()
-    config.read(config_file)
-
-    sections = [config[section] for section in config.sections()]
-    all_pairs = {k: v for section in sections for k,v in section.items()}
-
-    if any(field not in all_pairs.keys() for field in required_fields):
-        not_specified = [field for field in required_fields in field not in all_pairs.keys()]
+def _validifyfields(items):
+    if any(field not in items.keys() for field in required_fields):
+        not_specified = [field for field in required_fields if field not in items.keys()]
         raise Exception(f'One or more required config fields not specified: {not_specified}')
 
-    for field, default in defaults.items():
-        if field not in all_pairs.keys():
-            all_pairs[field] = default
 
-    return all_pairs
+def parse_config(config_file):
+    """Parses an INI style config file.
+
+        Allows for certain defaults, and has required fields. Makes extensive use of the configparser and json
+        libraries. Casts arguments to their desired types.
+
+        Args:
+            config_file: path to desired config file.
+
+        Returns:
+            A dict containing all key-value pairs from config file.
+
+        Raises:
+            Exception if any required fields are missing.
+        """
+
+    parser = configparser.ConfigParser()
+    parser.read(config_file)
+
+    sections = parser.sections()
+    print(sections)
+    directory = dict()
+    for section in sections:
+        items = parser.items(section)
+        directory[section] = [items[i][0] for i in range(len(items))]
+
+    all_pairs = {item : _jsonload(parser, sect, item) for sect in sections for item in directory[sect]}
+    _validifyfields(all_pairs)
+
+    config = Config(seed=all_pairs['seed'],
+                    domain=all_pairs['domain'],
+                    algs=all_pairs['algs'],
+                    partial_expansion=all_pairs['partial_expansion'],
+                    param=all_pairs['param'])
+
+    return config
+

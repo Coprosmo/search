@@ -1,1 +1,1 @@
-from src.search import *
+from src import *

@@ -1,6 +1,6 @@
-from _collections import namedtuple
+from collections import namedtuple
 
-__dict__.__all__ = ['OpenList']
+__all__ = ['OpenList']
 
 
 class OpenList:
