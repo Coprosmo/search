@@ -14,12 +14,16 @@ class Node:
     def expand(self):
         raise NotImplementedError
 
-    def path(self):
+    def path(self, reverse=True):
         node, path_back = self, []
         while node:
             path_back.append(node)
             node = node.parent
-        return tuple(reversed(path_back))
+        if reverse:
+            out = tuple(reverse(path_back))
+        else:
+            out = tuple(path_back)
+        return out
 
     def __repr__(self):
         return f'<Node(g = {self.g}, f = {self.f})>'

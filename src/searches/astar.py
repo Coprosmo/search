@@ -20,8 +20,10 @@ def search(problem, domain):
     while len(openlist) > 0:
         node = openlist.pop()
         closedlist.append(node)
+        print(f"Expanding node: g={node.g}, f={node.f}")
 
         if domain.goal_test(node.state, goal):
+            print("Solution found")
             solution = node.path()
             return solution, node.g
 
@@ -38,6 +40,7 @@ def search(problem, domain):
                                     g=temp_g,
                                     h=domain.heuristic(child.state)))
 
+    print('No solution found')
     return inf
 
 

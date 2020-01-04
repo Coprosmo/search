@@ -49,3 +49,7 @@ f values: (min: {self.min_f}, max: {self.max_f})"""
 
     def __getitem__(self, item):
         return heapq.nsmallest(item, self.openlist)[-1]
+
+    def __contains__(self, node):
+        state = node.state
+        return any([other.state == state for other in self.openlist])

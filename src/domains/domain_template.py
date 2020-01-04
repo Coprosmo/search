@@ -41,6 +41,10 @@ class DomainTemplate:
         raise NotImplementedError
 
     @staticmethod
+    def dist(state, other):
+        raise NotImplementedError
+
+    @staticmethod
     def _get_epsilon(problem):
         raise NotImplementedError
 
