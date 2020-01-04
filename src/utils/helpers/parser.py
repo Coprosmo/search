@@ -15,8 +15,7 @@ from ..datastructures.config import Config
 
 __all__ = ['parse_config']
 
-required_fields = ['domain',
-                   'algs',]
+required_fields = ['domain']
 
 defaults = {'seed': random.random(),
             'param': None,
@@ -54,20 +53,23 @@ def parse_config(config_file):
     parser.read(config_file)
 
     sections = parser.sections()
-    print(sections)
+
     directory = dict()
     for section in sections:
         items = parser.items(section)
         directory[section] = [items[i][0] for i in range(len(items))]
 
-    all_pairs = {item : _jsonload(parser, sect, item) for sect in sections for item in directory[sect]}
-    _validifyfields(all_pairs)
+    settings = {item: _jsonload(parser, "Settings", item) for item in directory["Settings"]}
+    searchers = []
 
-    config = Config(seed=all_pairs['seed'],
-                    domain=all_pairs['domain'],
-                    algs=all_pairs['algs'],
-                    partial_expansion=all_pairs['partial_expansion'],
-                    param=all_pairs['param'])
+    for searcher in directory["Searchers"]:
+        new_search = _jsonload(parser, "Searchers", searcher)
+        new_search['name'] = searcher
+        searchers.append(new_search)
+    searchers = tuple(searchers)
 
+    config = Config(settings=settings, searchers=searchers)
+    _validifyfields(settings)
+    
     return config
 
