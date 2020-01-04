@@ -70,6 +70,6 @@ def parse_config(config_file):
 
     config = Config(settings=settings, searchers=searchers)
     _validifyfields(settings)
-    
+
     return config
 
