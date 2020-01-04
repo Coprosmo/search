@@ -3,14 +3,14 @@ import configparser
 import importlib
 import sys
 
-from utils.helpers import parse_config
+from utils import helpers
 from utils.datastructures import Config
 
 # command line args, etc
-config_file = 'experiments/example2.conf'
+config_file = 'experiments/example.conf'
 
 # load and unpack config file
-config = parse_config(config_file)
+config = helpers.parse_config(config_file)
 print(config)
 domain_name = config.settings['domain']
 
@@ -24,12 +24,13 @@ for searcher in config.searchers:
 
 #search_algs = [importlib.import_module('.searches.' + alg_name, package='src') for alg_name in config.searchers_alg_names]
 print('Domain: ', domain.__name__, end='\n\n')
-problems = [(1, 2, 3, 5, 4)]
+problems = [(1, 2, 3, 5, 4), (3, 4, 5, 1, 2)]
 
 # log initial configuration
 
 # run search
 for i, problem in enumerate(problems):
+    search_scopes = []
     for search_settings in config.searchers:
         label = f'{config.settings["domain"]}_{search_settings["name"]}_{i}'
         original_stdout = sys.stdout
@@ -39,10 +40,13 @@ for i, problem in enumerate(problems):
         print('**************************************************')
         print(f'Running search: {searcher.__name__}')
         print('-----------------')
-        print(f'Search settings: {search_settings}')
+        #scope = searcher.search(problem, domain)
+        search_scopes.append(0)
         print('-----------------\n\n')
 
         sys.stdout = original_stdout
+
+    helpers.write_out(search_scopes, i)
 
 #search(**search_args)
 

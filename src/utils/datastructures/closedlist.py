@@ -1,6 +1,7 @@
 
 __all__ = ['ClosedList']
 
+
 class ClosedList:
     def __init__(self):
         self.closedlist = set()

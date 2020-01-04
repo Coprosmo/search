@@ -7,7 +7,7 @@ __name__ = 'astar'
 print('Loading astar.py...')
 
 
-def search(problem, domain):
+def astar(problem, domain):
     openlist = ds.OpenList()
     closedlist = ds.ClosedList()
     initial, goal = problem['initial'], problem['goal']
@@ -25,7 +25,8 @@ def search(problem, domain):
         if domain.goal_test(node.state, goal):
             print("Solution found")
             solution = node.path()
-            return solution, node.g
+            solution_node = node
+            return locals()
 
         children = node.expand()
         for child in children:
@@ -40,9 +41,9 @@ def search(problem, domain):
                                     g=temp_g,
                                     h=domain.heuristic(child.state)))
 
-    print('No solution found')
-    return inf
+    return locals()
 
 
-def _setup_vars(problem):
-    raise NotImplementedError
+def search(problem, domain):
+    search_vars = astar(problem, domain)
+    return search_vars
