@@ -32,7 +32,7 @@ problems = [(1, 2, 3, 5, 4), (3, 4, 5, 1, 2)]
 for i, problem in enumerate(problems):
     search_scopes = []
     for search_settings in config.searchers:
-        label = f'{config.settings["domain"]}_{search_settings["name"]}_{i}'
+        label = f'{config.settings["domain"]}_{search_settings["name"]}_{i}.log'
         original_stdout = sys.stdout
         sys.stdout = open(f'experiments/runs/{label}', 'w')
         searcher = searcher_modules[search_settings['searcher']]
