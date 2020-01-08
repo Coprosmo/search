@@ -7,7 +7,8 @@ from ..utils import datastructures as ds
 
 __name__ = 'bsharp'
 
-print('Loading bsharp.py...')
+nodes_expanded = 0
+nodes_generated = 2
 
 
 def bsharp(problem, domain, settings):
@@ -70,6 +71,8 @@ def bsharp(problem, domain, settings):
 
 
 def expand_level(openlist, closedlist, gLim, fLim, best, epsilon, problem, domain, settings):
+    global nodes_expanded, nodes_generated
+
     expandable_f = {node for node in openlist[1]
                         if node.f <= fLim and node.g < gLim[1]}
     expandable_b = {node for node in openlist[-1]
@@ -78,6 +81,7 @@ def expand_level(openlist, closedlist, gLim, fLim, best, epsilon, problem, domai
 
     while len(expandable) != 0:
         n = expandable.pop()    # automatically removes n
+        nodes_expanded += 1
         dir = n.direction
         openlist[dir].remove(n)
         closedlist[dir].append(n)
@@ -104,6 +108,7 @@ def expand_level(openlist, closedlist, gLim, fLim, best, epsilon, problem, domai
                 direction=n.direction,
                 parent=n
             )
+            nodes_generated += 1
 
             openlist[dir].append(c_node)
             if c_node.g < gLim[dir] and c_node.f <= fLim:
@@ -136,4 +141,6 @@ def search(problem, domain, settings):
     search_vars = bsharp(problem, domain, settings)
     now = time.perf_counter()
     print(f'All done! ({(now - since)//60})m {(now - since) % 60}s')
+    print(f'Expanded = {nodes_expanded}\n'
+          f'Generated = {nodes_generated}')
     return search_vars

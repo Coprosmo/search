@@ -4,12 +4,15 @@ from math import inf
 import time
 
 from ..utils import datastructures as ds
-__name__ = 'astar'
 
-print('Loading astar.py...')
+__name__ = 'astar'
+nodes_generated = 1
+nodes_expanded = 0
 
 
 def astar(problem, domain):
+    global nodes_generated, nodes_expanded
+
     openlist = ds.OpenList()
     closedlist = ds.ClosedList()
     initial, goal = problem.initial, problem.goal
@@ -23,6 +26,7 @@ def astar(problem, domain):
         node = openlist.pop()
         closedlist.append(node)
         print(f"Expanding node: g={node.g}, f={node.f}, state={node.state}")
+        nodes_expanded += 1
 
         if goal_test(node.state, goal):
             print("Solution found")
@@ -50,6 +54,7 @@ def astar(problem, domain):
                         g=temp_g,
                         h=domain.heuristic(child, goal),
                         parent=node))
+            nodes_generated += 1
     return locals()
 
 
@@ -62,4 +67,6 @@ def search(problem, domain, settings):
     search_vars = astar(problem, domain)
     now = time.perf_counter()
     print(f'All done! ({(now - since)//60})m {(now - since) % 60}s')
+    print(f'Expanded = {nodes_expanded}\n'
+          f'Generated = {nodes_generated}')
     return search_vars
