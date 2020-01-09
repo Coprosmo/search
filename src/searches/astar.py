@@ -25,7 +25,6 @@ def astar(problem, domain):
     while len(openlist) > 0:
         node = openlist.pop()
         closedlist.append(node)
-        print(f"Expanding node: g={node.g}, f={node.f}, state={node.state}")
         nodes_expanded += 1
 
         if goal_test(node.state, goal):
