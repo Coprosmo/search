@@ -39,42 +39,6 @@ def get_searchers(config):
     return searchers
 
 
-def run_searchers(problems, searchers, config):
-    for i, problem in enumerate(problems):
-        search_scopes = []
-        for search_settings in config.searchers:
-            label = f'{config.settings["domain"]}_{search_settings["name"]}_{i}.log'
-            original_stdout = sys.stdout
-            sys.stdout = open(f'experiments/runs/{label}', 'w')
-            searcher = searchers[search_settings['searcher']]
-
-            print('**************************************************')
-            print(f'Running search: {searcher.__name__}')
-            print('-----------------')
-
-            scope = searcher.search(problem, domain, search_settings)
-            search_scopes.append(0)
-
-            sys.stdout = original_stdout
-        helpers.write_out(search_scopes, i)
-
-"""
-if __name__ == "__main__":
-    config = set_config()
-    domain = set_domain(config)
-    problems = domain.generate_problems(config)
-    set_heuristics(domain, config)
-
-    searchers = load_searchers(config)
-    run_searchers(problems, searchers, config)
-"""
-
-
-def run_search(searcher, problem, heuristic, config):
-    pass
-
-
-
 if __name__ == "__main__":
     config = set_config()
     domain = set_domain(config)
