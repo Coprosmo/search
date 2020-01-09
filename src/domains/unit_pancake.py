@@ -84,7 +84,12 @@ def successors(state):
     return output
 
 
+def heuristic(state, goal):
+    return NotImplementedError
+
+
 def gap_heuristic_fw(state, goal):
+    print(heuristic.degradation)
     s, g = state.state, goal.state
     h = sum([int(bool(_adjacent(s[i], s[i+1], g))) for i in range(len(g) - 1)])
     return h
@@ -96,7 +101,6 @@ def gap_heuristic_bw(state, goal):
 
 def zero_heuristic(state, goal):
     return 0
-
 
 def cost(state, other):
     return 1
@@ -113,4 +117,5 @@ def _adjacent(p1, p2, state):
 
 heuristics = {"zero" : (zero_heuristic, zero_heuristic, zero_heuristic),
               "gap" : (gap_heuristic_fw, gap_heuristic_fw, gap_heuristic_bw)}
+
 
