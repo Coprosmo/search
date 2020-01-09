@@ -6,10 +6,12 @@ search
 search contains and runs several different search algorithms on desired problems/domains
 
 
-Description
+Running experiments
 ===========
 
-Module is runnable via the __main__.py file in src, given a hardcoded config file which details domain, algorithms, heuristics, and problems. Results are to be saved to the logs folder.
+Until command-line parsing is implemented, running application is as simple as running search/src/__main__.py Search is configurable via a config file in the experiements directory.
+
+In the current version, a-star and b-sharp are available for experiments on the unit-cost pancake domain.
 
 
 Note
