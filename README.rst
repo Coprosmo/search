@@ -9,9 +9,9 @@ search contains and runs several different search algorithms on desired problems
 Running experiments
 ===========
 
-Until command-line parsing is implemented, running application is as simple as running search/src/__main__.py Search is configurable via a config file in the experiements directory.
+Until command-line parsing is implemented, running application is as simple as running search/src/__main__.py 
 
-In the current version, a-star and b-sharp are available for experiments on the unit-cost pancake domain.
+Search is configurable via a config file in the experiements directory. In the current version, a-star and b-sharp are available for experiments on the unit-cost pancake domain.
 
 
 Note
