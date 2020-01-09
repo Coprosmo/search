@@ -24,7 +24,7 @@ def set_domain(config):
     return domain
 
 
-def setup_searchers(config):
+def load_searchers(config):
     return {searcher['searcher']: importlib.import_module('.searches.' + searcher['searcher'], package='src')
             for searcher in config.searchers}
 
@@ -54,5 +54,8 @@ if __name__ == "__main__":
     domain = set_domain(config)
     problems = domain.generate_problems(config)
     set_heuristics(domain, config)
-    searchers = setup_searchers(config)
+    searcher_modules = load_searchers(config)
+    searchers = [search_settings["name"] for search_settings in config.searchers]
+
     run_searchers(problems, searchers, config)
+
