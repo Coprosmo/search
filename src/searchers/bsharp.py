@@ -2,146 +2,158 @@
 
 from math import inf
 import time
+import functools
 
 from ..utils import datastructures as ds
 
 __name__ = 'bsharp'
-__all__ = ['bsharp']
-
-nodes_expanded = 0
-nodes_generated = 2
+__all__ = ['BSharpSearch']
 
 
-def bsharp(problem, domain, settings):
-    initial = problem.initial
-    goal = problem.goal
-    best = inf
-    gLim = {1 : 0,
-            -1 : 0}
+class BSharpSearch:
+    def __init__(self, domain, heuristics, degradation, search_settings):
+        self.domain = domain
+        self.heuristic_fw = functools.partial(heuristics[1], d=degradation)
+        self.heuristic_bw = functools.partial(heuristics[2], d=degradation)
+        self.initial = None
+        self.goal = None
+        self.epsilon = None
+        self.split = search_settings['split']
+        self.best = inf
+        self.gLim = {1: 0,
+                     -1: 0}
+        self.fLim = 0
 
-    if goal_test(initial, goal):
-        best = 0
-        return locals()
+        self.openlist = {
+            1 : ds.OpenList(),  # forward
+            -1 : ds.OpenList()  # backward
+            }
+        self.closedlist = {
+            1: ds.ClosedList(),
+            -1: ds.ClosedList()
+        }
 
-    openlist = {
-        1 : ds.OpenList(),  # forward
-        -1 : ds.OpenList()  # backward
-    }
-    closedlist = {
-        1 : ds.ClosedList(),
-        -1 : ds.ClosedList()
-    }
+        self.settings = search_settings
+        self.expand = getattr(BSharpSearch, 'expand_' + search_settings['expansion']) or self.expand
 
-    openlist[1].append(ds.Node(
-        state=initial,
-        g=0,
-        h=domain.heuristic_fw(initial, goal),
-        direction=1
-    ))
-    openlist[-1].append(ds.Node(
-        state=goal,
-        g=0,
-        h=domain.heuristic_bw(goal, initial),
-        direction=-1
-    ))
+        self.nodes_expanded = 0
+        self.nodes_generated = 2
 
-    fLim = max(domain.heuristic_fw(initial, goal),
-               domain.heuristic_bw(goal, initial),
-               problem.epsilon)
+    def __call__(self, problem):
+        print('Starting bsharp')
+        since = time.perf_counter()
+        self.bsharp(problem)
+        now = time.perf_counter()
+        print(f'All done! ({(now - since) // 60})m {(now - since) % 60}s')
+        self.write_out()
 
-    while len(openlist[1]) != 0 and len(openlist[-1]) != 0:
-        if best == fLim:
-            return locals()
+    def bsharp(self, problem):
+        self.initial, self.goal = problem.initial, problem.goal
+        self.epsilon = problem.epsilon
 
-        gLim = split(gLim, fLim - problem.epsilon + 1, split=settings['split'])
-        best = expand_level(openlist=openlist,
-                     closedlist=closedlist,
-                     gLim=gLim,
-                     fLim=fLim,
-                     best=best,
-                     epsilon=problem.epsilon,
-                     problem=problem,
-                     domain=domain,
-                     settings=settings)
+        self.openlist[1].append(ds.Node(
+            state=self.initial,
+            g=0,
+            h=self.heuristic_fw(self.initial, self.goal),
+            direction=1
+        ))
 
-        if best == fLim:
-            return locals()
+        self.openlist[-1].append(ds.Node(
+            state=self.goal,
+            g=0,
+            h=self.heuristic_bw(self.goal, self.initial),
+            direction=-1
+        ))
 
-        fLim += 1
-    return best
+        self.fLim = max(self.heuristic_fw(self.initial, self.goal),
+                        self.heuristic_bw(self.goal, self.initial),
+                        self.epsilon)
 
+        while len(self.openlist[1]) != 0 and len(self.openlist[-1]) != 0:
+            if self.best == self.fLim:
+                return
 
-def expand_level(openlist, closedlist, gLim, fLim, best, epsilon, problem, domain, settings):
-    global nodes_expanded, nodes_generated
+            self.split_fn(self.fLim - self.epsilon + 1)
+            self.expand_level()
+            if self.best == self.fLim:
+                return
 
-    expandable_f = {node for node in openlist[1]
-                        if node.f <= fLim and node.g < gLim[1]}
-    expandable_b = {node for node in openlist[-1]
-                        if node.f <= fLim and node.g < gLim[-1]}
-    expandable = expandable_f.union(expandable_b)
+            self.fLim += 1
+        return
 
-    while len(expandable) != 0:
-        n = expandable.pop()    # automatically removes n
-        nodes_expanded += 1
-        dir = n.direction
-        openlist[dir].remove(n)
-        closedlist[dir].append(n)
+    def expand_level(self):
+        expandable_f = {node for node in self.openlist[1]
+                        if node.f <= self.fLim and node.g < self.gLim[1]}
+        expandable_b = {node for node in self.openlist[-1]
+                        if node.f <= self.fLim and node.g < self.gLim[-1]}
+        expandable = expandable_f.union(expandable_b)
 
-        for c in n.expand():
-            temp_g = n.g + domain.cost(n.state, c)
-            if c in closedlist[dir]:
-                continue
-            elif c in openlist[dir]:
-                prev_c_g = openlist[dir].get_g(c)
-                if temp_g >= prev_c_g:
+        while len(expandable) != 0:
+            n = expandable.pop()  # automatically removes n
+            self.nodes_expanded += 1
+            dir = n.direction
+            self.openlist[dir].remove(n)
+            self.closedlist[dir].append(n)
+
+            for c in self.expand(n):
+                temp_g = n.g + self.domain.cost(n.state, c)
+                if c in self.closedlist[dir]:
                     continue
+                elif c in self.openlist[dir]:
+                    prev_c_g = self.openlist[dir].get_g(c)
+                    if temp_g >= prev_c_g:
+                        continue
 
-            if c in openlist[dir]:
-                openlist[dir].remove(c)
+                if c in self.openlist[dir]:
+                    self.openlist[dir].remove(c)
 
-            if c in closedlist[dir]:
-                closedlist[dir].remove(c)
+                if c in self.closedlist[dir]:
+                    self.closedlist[dir].remove(c)
 
-            c_node = ds.Node(
-                state=c,
-                g=temp_g,
-                h=domain.heuristic_fw(c, problem.goal) if dir == 1 else domain.heuristic_bw(c, problem.initial),
-                direction=n.direction,
-                parent=n
-            )
-            nodes_generated += 1
+                c_node = ds.Node(
+                    state=c,
+                    g=temp_g,
+                    h=self.heuristic_fw(c, self.goal) if dir == 1 else self.heuristic_bw(c, self.initial),
+                    direction=n.direction,
+                    parent=n
+                )
+                self.nodes_generated += 1
 
-            openlist[dir].append(c_node)
-            if c_node.g < gLim[dir] and c_node.f <= fLim:
-                expandable.add(c_node)
+                self.openlist[dir].append(c_node)
+                if c_node.g < self.gLim[dir] and c_node.f <= self.fLim:
+                    expandable.add(c_node)
 
-            if c_node in openlist[-1 * dir]:    # opposite openlist
-                best = min(best, c_node.g + openlist[-1 * dir].get_g(c))
-                if best <= fLim:
-                    return best
+                if c_node in self.openlist[-1 * dir]:  # opposite openlist
+                    self.best = min(self.best, c_node.g + self.openlist[-1 * dir].get_g(c))
+                    if self.best <= self.fLim:
+                        return
+        return
 
-    return best
+    def goal_test(self, state, goal):
+        return state == goal
 
+    def split_fn(self, gLSum):
+        while self.gLim[-1] + self.gLim[1] != gLSum:
+            if self.gLim[1] / gLSum < self.split:
+                self.gLim[1] += 1
+            else:
+                self.gLim[-1] += 1
+        return
 
-def goal_test(state, goal):
-    return state == goal
+    @staticmethod
+    def expand_standard(node):
+        return (s for s in node.expand())
 
+    @staticmethod
+    def expand_g_deferral(node):
+        return (s for s in node.expand())
 
-def split(gLim, gLSum, split):
-    while gLim[-1] + gLim[1] != gLSum:
-        if gLim[1] / gLSum < split:
-            gLim[1] += 1
-        else:
-            gLim[-1] += 1
-    return gLim
-
-
-def search(problem, domain, settings):
-    print('Starting bsharp')
-    since = time.perf_counter()
-    search_vars = bsharp(problem, domain, settings)
-    now = time.perf_counter()
-    print(f'All done! ({(now - since)//60})m {(now - since) % 60}s')
-    print(f'Expanded = {nodes_expanded}\n'
-          f'Generated = {nodes_generated}')
-    return search_vars
+    def write_out(self):
+        print(f'Expanded = {self.nodes_expanded}\n'
+              f'Generated = {self.nodes_generated}\n'
+              f'Open list size at end (fw) = {len(self.openlist[1])}\n'
+              f'Open list size at end (bw) = {len(self.openlist[-1])}\n'
+              f'Closed list size at end (fw) = {len(self.closedlist[1])}\n'
+              f'Closed list size at end (bw) = {len(self.closedlist[-1])}\n'
+              f'Solution length = {self.best}\n'
+              f'Expansion = {self.expand}')

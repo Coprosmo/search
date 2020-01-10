@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 from random import sample
+import math
 
 from .domain_template import DomainTemplate
 
@@ -81,7 +82,8 @@ def successors(state):
     output = []
     for i in range(1, len(state) + 1):
         output.append(State(state[:i:-1] + state[i::]))
-    return output
+        yield State(state[:i:-1] + state[i::])
+    #return output
 
 
 def heuristic(state, goal, d):
@@ -90,7 +92,8 @@ def heuristic(state, goal, d):
 
 def gap_heuristic_fw(state, goal, d):
     s, g = state.state, goal.state
-    h = sum([int(bool(_adjacent(s[i], s[i+1], g))) for i in range(len(g) - 1)])
+    stop_condition = (len(g) - 1) - math.floor((d / 10)*len(g))
+    h = sum([int(bool(_adjacent(s[i], s[i+1], g))) for i in range(stop_condition)])
     return h
 
 

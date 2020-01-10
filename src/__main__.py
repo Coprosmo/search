@@ -6,32 +6,23 @@ import sys
 from utils import helpers
 
 
-def set_heuristics(domain, search_conf):
-    heuristics = domain.heuristics[search_conf['heuristic']]
-    domain.heuristic, domain.heuristic_fw, domain.heuristic_bw = heuristics[0], heuristics[0], heuristics[1]
-
 
 def get_heuristics(domain, search_conf):
     heuristics = domain.heuristics[search_conf['heuristic']]
     return heuristics[0], heuristics[0], heuristics[1]
 
 
-def set_config():
+def get_config():
     # TODO: replace this with command line arg
-    config_file = 'experiments/example2.conf'
+    config_file = 'experiments/example.conf'
     return helpers.parse_config(config_file)
 
 
-def set_domain(config):
+def get_domain(config):
     domain_name = config.settings['domain']
     domain = importlib.import_module('domains.' + domain_name)
     print('Domain: ', domain.__name__, end='\n\n')
     return domain
-
-
-def load_searchers(config):
-    return {searcher['searcher']: importlib.import_module('.searchers.' + searcher['searcher'], package='src')
-            for searcher in config.searchers}
 
 
 def get_searchers(config):
@@ -42,7 +33,6 @@ def get_searchers(config):
         search_module = importlib.import_module('.searchers.' + search_config['searcher'], package='src')
         for k in search_module.__dict__.keys():
             if k.endswith('Search'):
-                print(k)
                 searchers[name]["searcher"] = search_module.__dict__[k]
                 break
     return searchers
@@ -56,13 +46,13 @@ def generate_searchers(problems, searchers, domain, config):
 
         for degradation in search_conf["degradation"]:
             searcher = search_conf["searcher"]
-            label = f'{domain.__name__}_{search_name}_h{degradation}'
+            label = f'{domain.__name__}_{search_name}_h{degradation}_'
             yield searcher(domain, heuristics, degradation, search_conf), label
 
 
 if __name__ == "__main__":
-    config = set_config()
-    domain = set_domain(config)
+    config = get_config()
+    domain = get_domain(config)
     problems = domain.generate_problems(config)
     searchers = get_searchers(config)
     print(searchers)
@@ -70,22 +60,10 @@ if __name__ == "__main__":
     for i, problem in enumerate(problems):
         for searcher, label in generate_searchers(problems, searchers, domain, config):
             label = label + f'p{i}'
+            print(f'Starting search: {label} . . .')
+            original_stdout = sys.stdout
+            sys.stdout = open(f'experiments/runs/{label}', 'w')
             searcher(problem)
-
-"""
-    for search_name, search_conf in searchers.items():
-        #set_heuristics(domain, config)
-
-        for i, problem in enumerate(problems):
-            if isinstance(search_conf["degradation"], int):
-                search_conf["degradation"] = [search_conf["degradation"]]
-            for degradation in search_conf["degradation"]:
-                label = f'{domain.__name__}_{search_name}_h{degradation}_p{i}'
-                domain.heuristic.degradation = degradation
-                searcher = search_conf["searcher"]
-
-                original_stdout = sys.stdout
-                sys.stdout = open(f'experiments/runs/{label}', 'w')
-                output = searcher.search(problem, domain, search_conf)
-                sys.stdout = original_stdout
-"""
+            sys.stdout = original_stdout
+            print(f'Finished!')
+    print('All done :)')
