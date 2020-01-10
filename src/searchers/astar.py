@@ -4,6 +4,7 @@ from math import inf
 import time
 
 from ..utils import datastructures as ds
+import functools
 
 __name__ = 'astar'
 __all__ = ['AStarSearch', 'astar']
@@ -74,14 +75,25 @@ def search(problem, domain, settings):
 
 
 class AStarSearch:
-    def __init__(self, domain, search_settings):
+    def __init__(self, domain, heuristics, degradation, search_settings):
         self.domain = domain
+        self.heuristic = functools.partial(heuristics[0], d=degradation)
         self.openlist = ds.OpenList()
         self.closedlist = ds.ClosedList()
         self.nodes_generated = 1
         self.nodes_expanded = 0
 
-    def search(self, problem, domain):
+    def __call__(self, problem):
+        since = time.perf_counter()
+        self.astar(problem)
+        now = time.perf_counter()
+        print(f'All done! ({(now - since) // 60})m {(now - since) % 60}s')
+        print(f'Expanded = {nodes_expanded}\n'
+              f'Generated = {nodes_generated}')
+        self.write_out()
+
+    def search(self, problem):
+        # TODO: Remove this method
         since = time.perf_counter()
         astar(problem)
         now = time.perf_counter()
@@ -103,19 +115,18 @@ class AStarSearch:
             ds.Node(
                 state=initial,
                 g=0,
-                h=self.domain.heuristic(initial, goal)))
+                h=self.heuristic(initial, goal)))
 
         while len(self.openlist) > 0:
             node = self.openlist.pop()
             self.closedlist.append(node)
             self.nodes_expanded += 1
 
-            if goal_test(node.state, goal):
+            if self.goal_test(node.state, goal):
                 print("Solution found")
                 solution = node.path()
                 print(solution)
                 solution_node = node
-                return locals()
 
             children = node.expand()
             for child in children:
@@ -127,13 +138,13 @@ class AStarSearch:
                     self.openlist.replace(child, ds.Node(
                                                      state=child,
                                                      g=temp_g,
-                                                     h=self.domain.heuristic(child, goal),
+                                                     h=self.heuristic(child, goal),
                                                      parent=node))
 
                 else:
                     self.openlist.append(ds.Node(
                         state=child,
                         g=temp_g,
-                        h=self.domain.heuristic(child, goal),
+                        h=self.heuristic(child, goal),
                         parent=node))
                 self.nodes_generated += 1
