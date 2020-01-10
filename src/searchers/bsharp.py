@@ -6,6 +6,7 @@ import time
 from ..utils import datastructures as ds
 
 __name__ = 'bsharp'
+__all__ = ['bsharp']
 
 nodes_expanded = 0
 nodes_generated = 2
