@@ -19,6 +19,9 @@ class OpenList:
         out = heapq.heappop(self.openlist)
         return out
 
+    def peek(self):
+        return self.openlist[0]
+
     def get_g(self, state):
         for other in self.openlist:
             if other.state == state:
