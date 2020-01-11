@@ -34,39 +34,43 @@ class BSharpSearch:
         }
 
         self.settings = search_settings
-        self.expand = getattr(BSharpSearch, 'expand_' + search_settings['expansion']) or self.expand
+        self.expand = getattr(BSharpSearch, 'expand_' + search_settings['expansion']) or self.expand_standard
 
         self.nodes_expanded = 0
         self.nodes_generated = 2
 
     def __call__(self, problem):
+        self.problem = problem
+        self.heuristic_fw = functools.partial(self.heuristic_fw, goal=problem.goal)
+        self.heuristic_bw = functools.partial(self.heuristic_bw, goal=problem.initial)
+
         print('Starting bsharp')
         since = time.perf_counter()
-        self.bsharp(problem)
+        self.bsharp()
         now = time.perf_counter()
         print(f'All done! ({(now - since) // 60})m {(now - since) % 60}s')
         self.write_out()
 
-    def bsharp(self, problem):
-        self.initial, self.goal = problem.initial, problem.goal
-        self.epsilon = problem.epsilon
+    def bsharp(self):
+        self.initial, self.goal = self.problem.initial, self.problem.goal
+        self.epsilon = self.problem.epsilon
 
         self.openlist[1].append(ds.Node(
             state=self.initial,
             g=0,
-            h=self.heuristic_fw(self.initial, self.goal),
+            h=self.heuristic_fw(self.initial),
             direction=1
         ))
 
         self.openlist[-1].append(ds.Node(
             state=self.goal,
             g=0,
-            h=self.heuristic_bw(self.goal, self.initial),
+            h=self.heuristic_bw(self.goal),
             direction=-1
         ))
 
-        self.fLim = max(self.heuristic_fw(self.initial, self.goal),
-                        self.heuristic_bw(self.goal, self.initial),
+        self.fLim = max(self.heuristic_fw(self.initial),
+                        self.heuristic_bw(self.goal),
                         self.epsilon)
 
         while len(self.openlist[1]) != 0 and len(self.openlist[-1]) != 0:
@@ -82,13 +86,9 @@ class BSharpSearch:
         return
 
     def expand_level(self):
-        expandable_f = {node for node in self.openlist[1]
-                        if node.f <= self.fLim and node.g < self.gLim[1]}
-        expandable_b = {node for node in self.openlist[-1]
-                        if node.f <= self.fLim and node.g < self.gLim[-1]}
-        expandable = expandable_f.union(expandable_b)
-
+        expandable = self.get_expandable_nodes()
         while len(expandable) != 0:
+            # TODO: Make this peek the node, not remove
             n = expandable.pop()  # automatically removes n
             self.nodes_expanded += 1
             dir = n.direction
@@ -104,22 +104,7 @@ class BSharpSearch:
                     if temp_g >= prev_c_g:
                         continue
 
-                if c in self.openlist[dir]:
-                    self.openlist[dir].remove(c)
-
-                if c in self.closedlist[dir]:
-                    self.closedlist[dir].remove(c)
-
-                c_node = ds.Node(
-                    state=c,
-                    g=temp_g,
-                    h=self.heuristic_fw(c, self.goal) if dir == 1 else self.heuristic_bw(c, self.initial),
-                    direction=n.direction,
-                    parent=n
-                )
-                self.nodes_generated += 1
-
-                self.openlist[dir].append(c_node)
+                c_node = self.generate_child(c, parent=n)
                 if c_node.g < self.gLim[dir] and c_node.f <= self.fLim:
                     expandable.add(c_node)
 
@@ -128,6 +113,33 @@ class BSharpSearch:
                     if self.best <= self.fLim:
                         return
         return
+
+    def generate_child(self, c, parent):
+        temp_g = parent.g + self.domain.cost(parent.state, c)
+        dir = parent.direction
+        if c in self.openlist[dir]:
+            self.openlist[dir].remove(c)
+        if c in self.closedlist[dir]:
+            self.closedlist[dir].remove(c)
+
+        c_node = ds.Node(
+            state=c,
+            g=temp_g,
+            h=self.heuristic_fw(c) if dir == 1 else self.heuristic_bw(c),
+            direction=parent.direction,
+            parent=parent
+        )
+        self.nodes_generated += 1
+        self.openlist[dir].append(c_node)
+        return c_node
+
+    def get_expandable_nodes(self):
+        expandable_f = {node for node in self.openlist[1]
+                        if node.f <= self.fLim and node.g < self.gLim[1]}
+        expandable_b = {node for node in self.openlist[-1]
+                        if node.f <= self.fLim and node.g < self.gLim[-1]}
+        expandable = expandable_f.union(expandable_b)
+        return expandable
 
     def goal_test(self, state, goal):
         return state == goal
@@ -146,6 +158,7 @@ class BSharpSearch:
 
     @staticmethod
     def expand_g_deferral(node):
+        # TODO: Use filter() or generator with filter to get only states with g == G
         return (s for s in node.expand())
 
     def write_out(self):

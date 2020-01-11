@@ -3,7 +3,7 @@
 import importlib
 import sys
 
-from utils import helpers
+from src.utils import helpers
 
 
 
@@ -55,7 +55,6 @@ if __name__ == "__main__":
     domain = get_domain(config)
     problems = domain.generate_problems(config)
     searchers = get_searchers(config)
-    print(searchers)
 
     for i, problem in enumerate(problems):
         for searcher, label in generate_searchers(problems, searchers, domain, config):
