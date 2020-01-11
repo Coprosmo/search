@@ -18,8 +18,10 @@ class AStarSearch:
         self.problem = None
 
         self.heuristic = functools.partial(heuristics[0], d=degradation)
+        self.h_weighting = search_settings.get('heuristic_weighting', 1)
+
         # If user specifies an expansion protocol, try to use that, otherwise use standard protocol
-        expansion_protocol = search_settings.get('expansion', 0)
+        expansion_protocol = search_settings.get('expansion', None)
         self.expand = (expansion_protocol and getattr(AStarSearch, 'expand_' + search_settings['expansion'], 0)) \
             or self.expand_standard
         self.nodes_generated = 1
@@ -28,10 +30,11 @@ class AStarSearch:
     def astar(self):
         initial, goal = self.problem.initial, self.problem.goal
         self.openlist.append(
-            ds.Node(state=initial, g=0, h=self.heuristic(initial, goal)))
+            ds.Node(state=initial, g=0, h=(self.heuristic(initial) * self.h_weighting)))
 
         while len(self.openlist) > 0:
             node = self.openlist.peek()
+            print(node.f)
             if self.goal_test(node.state, goal):
                 return node
 
@@ -48,13 +51,13 @@ class AStarSearch:
             self.openlist.replace(child, ds.Node(
                 state=child,
                 g=temp_g,
-                h=self.heuristic(child, self.problem.goal),
+                h=(self.heuristic(child) * self.h_weighting),
                 parent=parent))
         else:
             self.openlist.append(ds.Node(
                 state=child,
                 g=temp_g,
-                h=self.heuristic(child, self.problem.goal),
+                h=(self.heuristic(child) * self.h_weighting),
                 parent=parent))
         self.nodes_generated += 1
 
@@ -74,11 +77,13 @@ class AStarSearch:
               f'Generated = {self.nodes_generated}\n'
               f'Open list size at end = {len(self.openlist)}\n'
               f'Closed list size at end = {len(self.closedlist)}\n'
-              f'Expansion = {self.expand}')
+              f'Expansion = {self.expand}\n'
+              f'Weighting = {self.h_weighting}')
         sys.stdout = original_std
 
     def __call__(self, problem, label):
         self.problem = problem
+        self.heuristic = functools.partial(self.heuristic, goal=problem.goal)
         since = time.perf_counter()
         self.astar()
         now = time.perf_counter()

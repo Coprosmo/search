@@ -25,7 +25,7 @@ def get_domain(config):
     return domain
 
 
-def get_searchers(config):
+def load_searching_algorithms(config):
     searchers = {}
     for search_config in config.searchers:
         name = search_config["name"]
@@ -54,10 +54,10 @@ if __name__ == "__main__":
     config = get_config()
     domain = get_domain(config)
     problems = domain.generate_problems(config)
-    searchers = get_searchers(config)
+    search_algs = load_searching_algorithms(config)
 
     for i, problem in enumerate(problems):
-        for searcher, label in generate_searchers(problems, searchers, domain, config):
+        for searcher, label in generate_searchers(problems, search_algs, domain, config):
             label = label + f'p{i}'
             print(f'Starting search: {label} . . .')
             original_stdout = sys.stdout
