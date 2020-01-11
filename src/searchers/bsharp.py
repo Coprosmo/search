@@ -1,13 +1,14 @@
 # bsharp.py
 
-from math import inf
-import time
-import functools
-
-from ..utils import datastructures as ds
-
 __name__ = 'bsharp'
 __all__ = ['BSharpSearch']
+
+import functools
+from math import inf
+import sys
+import time
+
+from src.utils import datastructures as ds
 
 
 class BSharpSearch:
@@ -38,18 +39,6 @@ class BSharpSearch:
 
         self.nodes_expanded = 0
         self.nodes_generated = 2
-
-    def __call__(self, problem):
-        self.problem = problem
-        self.heuristic_fw = functools.partial(self.heuristic_fw, goal=problem.goal)
-        self.heuristic_bw = functools.partial(self.heuristic_bw, goal=problem.initial)
-
-        print('Starting bsharp')
-        since = time.perf_counter()
-        self.bsharp()
-        now = time.perf_counter()
-        print(f'All done! ({(now - since) // 60})m {(now - since) % 60}s')
-        self.write_out()
 
     def bsharp(self):
         self.initial, self.goal = self.problem.initial, self.problem.goal
@@ -161,7 +150,9 @@ class BSharpSearch:
         # TODO: Use filter() or generator with filter to get only states with g == G
         return (s for s in node.expand())
 
-    def write_out(self):
+    def write_out(self, label):
+        original_std = sys.stdout
+        sys.stdout = open(f'experiments/runs/{label}.out', 'w')
         print(f'Expanded = {self.nodes_expanded}\n'
               f'Generated = {self.nodes_generated}\n'
               f'Open list size at end (fw) = {len(self.openlist[1])}\n'
@@ -170,3 +161,16 @@ class BSharpSearch:
               f'Closed list size at end (bw) = {len(self.closedlist[-1])}\n'
               f'Solution length = {self.best}\n'
               f'Expansion = {self.expand}')
+        sys.stdout = original_std
+
+    def __call__(self, problem, label):
+        self.problem = problem
+        self.heuristic_fw = functools.partial(self.heuristic_fw, goal=problem.goal)
+        self.heuristic_bw = functools.partial(self.heuristic_bw, goal=problem.initial)
+
+        print('Starting bsharp')
+        since = time.perf_counter()
+        self.bsharp()
+        now = time.perf_counter()
+        print(f'All done! ({(now - since) // 60})m {(now - since) % 60}s')
+        self.write_out(label)
