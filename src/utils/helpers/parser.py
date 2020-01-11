@@ -6,14 +6,17 @@ config file.
     Typical usage example:
 
     config = parse(example_config.conf)
+    print(config.settings, config.searchers)
 """
 
-import configparser
-import random
-import json
-from ..datastructures.config import Config
-
 __all__ = ['parse_config']
+
+from collections import namedtuple
+import json
+import random
+
+import configparser
+
 
 required_fields = ['domain']
 
@@ -22,12 +25,18 @@ defaults = {'seed': random.random(),
             'partial_expansion': False
             }
 
+Config = namedtuple('Config', 'settings searchers')
+
 
 def _jsonload(parser, sect, item):
+    """Returns a json-loaded object from parser. Type-casting is handled
+    by json module.
+    """
     return json.loads(parser.get(sect, item))
 
 
 def _validifyfields(items):
+    """Ensures that all required fields are present in config file."""
     if any(field not in items.keys() for field in required_fields):
         not_specified = [field for field in required_fields if field not in items.keys()]
         raise Exception(f'One or more required config fields not specified: {not_specified}')
@@ -36,18 +45,18 @@ def _validifyfields(items):
 def parse_config(config_file):
     """Parses an INI style config file.
 
-        Allows for certain defaults, and has required fields. Makes extensive use of the configparser and json
-        libraries. Casts arguments to their desired types.
+    Allows for certain defaults, and has required fields. Makes extensive use of the configparser and json
+    libraries. Casts arguments to their desired types.
 
-        Args:
-            config_file: path to desired config file.
+    Args:
+        config_file: path to desired config file.
 
-        Returns:
-            A dict containing all key-value pairs from config file.
+    Returns:
+        A dict containing all key-value pairs from config file.
 
-        Raises:
-            Exception if any required fields are missing.
-        """
+    Raises:
+        Exception if any required fields are missing.
+    """
 
     parser = configparser.ConfigParser()
     parser.read(config_file)
@@ -72,4 +81,3 @@ def parse_config(config_file):
     _validifyfields(settings)
 
     return config
-

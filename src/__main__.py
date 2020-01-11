@@ -58,11 +58,11 @@ if __name__ == "__main__":
 
     for i, problem in enumerate(problems):
         for searcher, label in generate_searchers(problems, searchers, domain, config):
-            label = label + f'p{i}'
+            label = label + f'p{i}.log'
             print(f'Starting search: {label} . . .')
             original_stdout = sys.stdout
             sys.stdout = open(f'experiments/runs/{label}', 'w')
-            searcher(problem)
+            searcher(problem, label)
             sys.stdout = original_stdout
             print(f'Finished!')
     print('All done :)')
