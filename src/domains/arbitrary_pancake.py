@@ -4,8 +4,6 @@ from collections import namedtuple
 from random import sample
 import math
 
-from .domain_template import DomainTemplate
-
 
 Problem = namedtuple('Problem', 'initial goal epsilon')
 
@@ -19,16 +17,6 @@ def parse_problem(problem_str):
                       goal=State(goal_tuple),
                       epsilon=1)
     return problem
-
-
-def pancake_predicates(pancake_stack):
-    state = set()
-    state.add(('on', pancake_stack[-1], None))
-    state.add(('on', None, pancake_stack[0]))
-    for i in range(len(pancake_stack) - 1, 0, -1):
-        state.add(('on', pancake_stack[i - 1], pancake_stack[i]))
-    state = frozenset(state)
-    return state
 
 
 def generate_problems(config):
@@ -48,12 +36,14 @@ class State:
         self.n_successors = len(self.state) - 2
 
     def successors(self):
-        output = []
-        for i in range(1, len(self.state) - 1):
+        for i in range(len(self.state) - 2, 0, -1):
             first = [self.state[j] for j in range(i)]
             second = [self.state[j] for j in range(len(self.state)-1, i-1, -1)]
             new_state = State(tuple(first + second))
             yield new_state, cost(self, new_state)
+
+        #     output.append(State(tuple(first + second)))
+        # return output
 
     def __hash__(self):
         return hash(self.state)
@@ -77,15 +67,15 @@ def heuristic(state, goal, d):
     return NotImplementedError
 
 
-def gap_heuristic_fw(state, goal, d):
-    s, g = state.state, goal.state
-    stop_condition = (len(g) - 1) - math.floor((d / 10)*len(g))
-    h = sum([int(bool(_adjacent(s[i], s[i+1], g))) for i in range(stop_condition)])
-    return h
+def largest_pancake_heuristic_fw(state, goal, d):
+    if state == goal:
+        return 0
+    stop_condition = len(goal.state) - math.floor((d / 10) * len(goal.state))
+    return state.state[max(i for i in range(1, stop_condition) if state.state[i] != goal.state[i])]
 
 
-def gap_heuristic_bw(state, goal, d):
-    return gap_heuristic_fw(state, goal)
+def largest_pancake_heuristic_bw(state, goal, d):
+    return largest_pancake_heuristic_fw(state, goal)
 
 
 def zero_heuristic(state, goal, d):
@@ -93,7 +83,11 @@ def zero_heuristic(state, goal, d):
 
 
 def cost(state, other):
-    return 1
+    state_1, state_2 = state.state, other.state
+    i = 0
+    while state_1[i] == state_2[i] and i < len(state_1):
+        i += 1
+    return len(state_1) - i
 
 
 def _adjacent(p1, p2, state):
@@ -106,6 +100,9 @@ def _adjacent(p1, p2, state):
 
 
 heuristics = {"zero" : (zero_heuristic, zero_heuristic, zero_heuristic),
-              "gap" : (gap_heuristic_fw, gap_heuristic_fw, gap_heuristic_bw)}
+              "largest_pancake" : (largest_pancake_heuristic_fw, largest_pancake_heuristic_fw, largest_pancake_heuristic_bw)}
+
+if __name__ == "__main__":
+    print(cost(State((5, 4, 1, 2, 3)), State((5, 4, 3, 2, 1))))
 
 

@@ -8,7 +8,7 @@ from src.utils import helpers
 
 
 def get_heuristics(domain, search_conf):
-    heuristics = domain.heuristics[search_conf['heuristic']]
+    heuristics = domain.heuristics.get(search_conf['heuristic'], domain.heuristics['zero'])
     return heuristics[0], heuristics[0], heuristics[1]
 
 
@@ -50,7 +50,7 @@ def generate_searchers(problems, searchers, domain, config):
             yield searcher(domain, heuristics, degradation, search_conf), label
 
 
-if __name__ == "__main__":
+def main():
     config = get_config()
     domain = get_domain(config)
     problems = domain.generate_problems(config)
@@ -66,3 +66,7 @@ if __name__ == "__main__":
             sys.stdout = original_stdout
             print(f'Finished!')
     print('All done :)')
+
+
+if __name__ == "__main__":
+    main()

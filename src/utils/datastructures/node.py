@@ -30,18 +30,33 @@ class Node:
         self.g = g
         self.h = h
         self.f = g + h
+        self.G = self.g
+        self.F = self.f
         self.direction = direction
         self.parent = parent
         self.action = action
         self.depth = parent.depth + 1 if parent else 0
+        self.n_expanded = 0
 
-    def expand(self):
+    def expand(self, partial_expansion=False):
         """Expands node, to give all directly reachable children.
 
         Returns:
             A generator object for the successors of node's state.
         """
-        return self.state.successors()
+        if partial_expansion == "g":
+            for i, (state, cost) in enumerate(self.state.successors()):
+                if self.g + cost == self.G:
+                    if i + 1 == self.state.n_successors:
+                        self.G = None
+                    yield state, cost
+                elif self.g + cost > self.G:
+                    self.G = self.g + cost
+                    break
+        else:
+            for state, cost in self.state.successors():
+                self.n_expanded += 1
+                yield state, cost
 
     def path(self, reverse=True):
         """Gives the path from the initial state to node's state.
@@ -64,9 +79,20 @@ class Node:
             out = tuple(path_back)
         return out
 
+    def is_fully_expanded(self):
+        """Returns a boolean value describing whether node has been
+        fully expanded. Intended for use in deferred expansion search.
+
+        Returns:
+            A boolean value, True if node has been expanded, otherwise
+                False.
+        """
+        return self.G is None
+
     def __hash__(self):
         """Gets hash value of node, based on state."""
-        return hash((self.state, self.g, self.f, self.direction, self.parent))
+        # return hash((self.state, self.g, self.f, self.direction, self.parent))
+        return hash((self.state, self.direction))
 
     def __repr__(self):
         """Gives representation of node."""

@@ -21,19 +21,24 @@ class OpenList:
 
     Attributes:
         openlist: A min-heap intended to contain state objects.
+        g_tracker: A min-heap storing the different g-values in the
+            open-list
     """
 
     def __init__(self):
         """Initializes open-list with an empty list."""
         self.openlist = []
+        self.g_tracker = []
 
     def append(self, node):
-        """Adds a node to the openlist.
+        """Adds a node to the openlist. Updates the g_tracker
+        attribute to account for the new node's g-value.
 
         Args:
             node: Expected to be of type Node.
         """
         heapq.heappush(self.openlist, node)
+        heapq.heappush(self.g_tracker, node.g)
 
     def pop(self):
         """Removes and returns the highest-priority element in
@@ -104,10 +109,14 @@ class OpenList:
         state = self._node_to_state(obj)
         for i, x in enumerate(self.openlist):
             if x.state == state:
+                self.g_tracker.pop(self.g_tracker.index(x.g))
+                heapq.heapify(self.g_tracker)
                 self.openlist[i] = other
                 break
         else:
             raise Exception("Node not found.")
+        heapq.heappush(self.g_tracker, other.g)
+
 
     def remove(self, obj):
         """Removes a specified node from the open-list.
@@ -119,15 +128,28 @@ class OpenList:
             Exception if no node with specified state exists in
                 open-list.
         """
+
         state = self._node_to_state(obj)
         for i in range(len(self.openlist)):
             if self.openlist[i].state == state:
+                self.g_tracker.pop(self.g_tracker.index(self.openlist[i].g))
+                heapq.heapify(self.g_tracker)
                 break
         else:
             raise Exception("Node not found.")
 
         self.openlist.pop(i)
         heapq.heapify(self.openlist)
+
+    def min_g(self):
+        """Returns the least g-value among nodes in the open list.
+
+        Returns:
+            An integer value.
+        """
+        out = heapq.heappop(self.g_tracker)
+        heapq.heappush(self.g_tracker, out)
+        return out
 
     def _node_to_state(self, obj):
         """Checks if an object is a node or a state, and returns the associated state.

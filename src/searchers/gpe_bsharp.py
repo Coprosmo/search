@@ -37,7 +37,6 @@ class BSharpSearch:
         }
 
         self.settings = search_settings
-
         self.nodes_expanded = 0
         self.nodes_generated = 2
         self.removed = set()
@@ -82,9 +81,13 @@ class BSharpSearch:
             # TODO: Make this peek the node, not remove
             n = expandable.pop()
             dir = n.direction
-            print(n)
+            #print(self.openlist)
 
             for child_state, child_g in self.expand(n):
+                # TODO: Change this to account for Zones 1,2 / 3
+                if child_g <= self.fLim - self.openlist[-1 * dir].min_g():
+                    pass
+
                 if child_state in self.closedlist[dir]:
                     continue
                 elif child_state in self.openlist[dir]:
@@ -105,6 +108,14 @@ class BSharpSearch:
                 self.openlist[dir].remove(n)
                 self.closedlist[dir].append(n)
                 self.nodes_expanded += 1
+                continue
+
+            elif n.G <= self.fLim - self.openlist[-1 * dir].min_g():
+                expandable.add(n)
+
+            print(len(expandable))
+
+
         return
 
     def generate_child(self, c, parent):
@@ -147,10 +158,7 @@ class BSharpSearch:
         return
 
     def expand(self, node):
-        self.openlist[node.direction].remove(node)
-        self.closedlist[node.direction].append(node)
-        self.nodes_expanded += 1
-        return ((s, c) for s, c in node.expand())
+        return node.expand(partial_expansion="g")
 
     def write_out(self, label):
         original_std = sys.stdout

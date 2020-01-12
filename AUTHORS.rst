@@ -2,4 +2,4 @@
 Contributors
 ============
 
-* Henry <henrybzwart@gmail.com>
+* Henry <hzwa180@aucklanduni.ac.nz>
