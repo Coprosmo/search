@@ -3,6 +3,7 @@
 from collections import namedtuple
 from random import sample
 import math
+import random
 
 
 Problem = namedtuple('Problem', 'initial goal epsilon')
@@ -26,7 +27,18 @@ def generate_problems(config):
             with open(file_name, 'r') as f:
                 problems.append(parse_problem(f.readline()))
     else:
-        pass
+        try:
+            n_problems = config.settings['n_problems']
+            param = config.settings['param']
+        except KeyError:
+            raise Exception("For config file specifying no precompiled problem, ensure parameters 'params', "
+                            "'n_problems' are set'")
+        for p in range(n_problems):
+            x = [i for i in range(1, param)]
+            random.shuffle(x)
+            problem_str = ' '.join(map(str, [param] + x))
+            problems.append(parse_problem(problem_str))
+
     return problems
 
 

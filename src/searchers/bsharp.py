@@ -82,7 +82,6 @@ class BSharpSearch:
             # TODO: Make this peek the node, not remove
             n = expandable.pop()
             dir = n.direction
-            print(n)
 
             for child_state, child_g in self.expand(n):
                 if child_state in self.closedlist[dir]:
@@ -155,14 +154,14 @@ class BSharpSearch:
     def write_out(self, label):
         original_std = sys.stdout
         sys.stdout = open(f'experiments/runs/{label}.out', 'w')
-        print(f'Expanded = {self.nodes_expanded}\n'
+        print(f'Problem = {self.problem.initial}\n'
+              f'Expanded = {self.nodes_expanded}\n'
               f'Generated = {self.nodes_generated}\n'
               f'Open list size at end (fw) = {len(self.openlist[1])}\n'
               f'Open list size at end (bw) = {len(self.openlist[-1])}\n'
               f'Closed list size at end (fw) = {len(self.closedlist[1])}\n'
               f'Closed list size at end (bw) = {len(self.closedlist[-1])}\n'
               f'Solution length = {self.best}\n'
-              f'Expansion = {self.expand}\n'
               f'Heuristic = {self.heuristic_fw}')
         sys.stdout = original_std
 
