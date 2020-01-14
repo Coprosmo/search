@@ -38,7 +38,7 @@ class Node:
         self.depth = parent.depth + 1 if parent else 0
         self.n_expanded = 0
 
-    def expand(self, partial_expansion=False):
+    def expand(self, partial_expansion=False, gen_limit=None):
         """Expands node, to give all directly reachable children.
 
         Returns:
@@ -46,10 +46,13 @@ class Node:
         """
         if partial_expansion == "g":
             for i, (state, cost) in enumerate(self.state.successors()):
+                if self.g + cost > gen_limit:
+                    self.G = self.g + cost
+                    break
                 if self.g + cost == self.G:
                     if i + 1 == self.state.n_successors:
                         self.G = None
-                    yield state, cost
+                    yield state, self.g + cost
                 elif self.g + cost > self.G:
                     self.G = self.g + cost
                     break
@@ -58,11 +61,13 @@ class Node:
                 self.n_expanded += 1
                 yield state, cost
 
-    def path(self, reverse=True):
+    def path(self, reverse=False):
         """Gives the path from the initial state to node's state.
+        Ordinarily reverses path at end so correct order, so if
+        argument reverse=True is specified, this is not done.
 
         Args:
-            reverse: An optional argument. If false, returns path in
+            reverse: An optional argument. If True, returns path in
                 reversed order.
 
         Returns:
@@ -71,12 +76,12 @@ class Node:
         """
         node, path_back = self, []
         while node:
-            path_back.append(node)
+            path_back.append((node.g, node.state.state))
             node = node.parent
         if reverse:
-            out = tuple(reversed(path_back))
-        else:
             out = tuple(path_back)
+        else:
+            out = tuple(reversed(path_back))
         return out
 
     def is_fully_expanded(self):

@@ -23,6 +23,7 @@ class BSharpSearch:
         self.epsilon = None
         self.split = search_settings['split']
         self.best = inf
+        self.collision_nodes = (None, None)
         self.gLim = {1: 0,
                      -1: 0}
         self.fLim = 0
@@ -96,7 +97,10 @@ class BSharpSearch:
                     expandable.add(child_node)
 
                 if child_node in self.openlist[-1 * dir]:  # opposite openlist
+                    old_best = self.best
                     self.best = min(self.best, child_node.g + self.openlist[-1 * dir].get_g(child_state))
+                    if self.best != old_best:
+                        self.collision_nodes = (self.openlist[1].get(child_state), self.openlist[-1].get(child_state))
                     if self.best <= self.fLim:
                         return
 
@@ -152,6 +156,9 @@ class BSharpSearch:
         return ((s, c) for s, c in node.expand())
 
     def write_out(self, label):
+        solution_path = f'{self.collision_nodes[0].path()[:-1]} ' \
+                        f'+ {self.collision_nodes[0].state.state} ' \
+                        f'+ {self.collision_nodes[1].path(reverse=True)[1:]}'
         original_std = sys.stdout
         sys.stdout = open(f'experiments/runs/{label}.out', 'w')
         print(f'Problem = {self.problem.initial}\n'
@@ -162,6 +169,7 @@ class BSharpSearch:
               f'Closed list size at end (fw) = {len(self.closedlist[1])}\n'
               f'Closed list size at end (bw) = {len(self.closedlist[-1])}\n'
               f'Solution length = {self.best}\n'
+              f'Solution path = {solution_path}\n'
               f'Heuristic = {self.heuristic_fw}')
         sys.stdout = original_std
 

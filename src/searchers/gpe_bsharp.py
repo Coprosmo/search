@@ -23,6 +23,7 @@ class BSharpSearch:
         self.epsilon = None
         self.split = search_settings['split']
         self.best = inf
+        self.collision_nodes = (None, None)
         self.gLim = {1: 0,
                      -1: 0}
         self.fLim = 0
@@ -40,6 +41,7 @@ class BSharpSearch:
         self.nodes_expanded = 0
         self.nodes_generated = 2
         self.removed = set()
+        self.special_state = None
 
     def bsharp(self):
         self.initial, self.goal = self.problem.initial, self.problem.goal
@@ -68,6 +70,7 @@ class BSharpSearch:
                 return
 
             self.split_fn(self.fLim - self.epsilon + 1)
+
             self.expand_level()
             if self.best == self.fLim:
                 return
@@ -81,12 +84,12 @@ class BSharpSearch:
             # TODO: Make this peek the node, not remove
             n = expandable.pop()
             dir = n.direction
-            #print(self.openlist)
 
-            for child_state, child_g in self.expand(n):
+            for child_state, child_g in self.expand(n, gen_limit=(self.fLim - self.openlist[-1 * dir].min_g())):
                 # TODO: Change this to account for Zones 1,2 / 3
                 if child_g <= self.fLim - self.openlist[-1 * dir].min_g():
                     pass
+
 
                 if child_state in self.closedlist[dir]:
                     continue
@@ -100,7 +103,10 @@ class BSharpSearch:
                     expandable.add(child_node)
 
                 if child_node in self.openlist[-1 * dir]:  # opposite openlist
+                    old_best = self.best
                     self.best = min(self.best, child_node.g + self.openlist[-1 * dir].get_g(child_state))
+                    if old_best != self.best:
+                        self.collision_nodes = (self.openlist[1].get(child_state), self.openlist[-1].get(child_state))
                     if self.best <= self.fLim:
                         return
 
@@ -154,10 +160,13 @@ class BSharpSearch:
                 self.gLim[-1] += 1
         return
 
-    def expand(self, node):
-        return node.expand(partial_expansion="g")
+    def expand(self, node, gen_limit):
+        return node.expand(partial_expansion="g", gen_limit=gen_limit)
 
     def write_out(self, label):
+        solution_path = f'{self.collision_nodes[0].path()[:-1]} ' \
+                        f'+ {(self.collision_nodes[0].g, self.collision_nodes[0].state.state)} ' \
+                        f'+ {self.collision_nodes[1].path(reverse=True)[1:]}'
         original_std = sys.stdout
         sys.stdout = open(f'experiments/runs/{label}.out', 'w')
         print(f'Problem = {self.problem.initial}\n'
@@ -168,6 +177,7 @@ class BSharpSearch:
               f'Closed list size at end (fw) = {len(self.closedlist[1])}\n'
               f'Closed list size at end (bw) = {len(self.closedlist[-1])}\n'
               f'Solution length = {self.best}\n'
+              f'Solution path = {solution_path}\n'
               f'Heuristic = {self.heuristic_fw}')
         sys.stdout = original_std
 

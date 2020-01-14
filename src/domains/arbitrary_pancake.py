@@ -25,7 +25,8 @@ def generate_problems(config):
     if config.settings['precompiled']:
         for file_name in config.settings['precompiled']:
             with open(file_name, 'r') as f:
-                problems.append(parse_problem(f.readline()))
+                for line in f:
+                    problems.append(parse_problem(line))
     else:
         try:
             n_problems = config.settings['n_problems']
@@ -113,8 +114,5 @@ def _adjacent(p1, p2, state):
 
 heuristics = {"zero" : (zero_heuristic, zero_heuristic, zero_heuristic),
               "largest_pancake" : (largest_pancake_heuristic_fw, largest_pancake_heuristic_fw, largest_pancake_heuristic_bw)}
-
-if __name__ == "__main__":
-    print(cost(State((5, 4, 1, 2, 3)), State((5, 4, 3, 2, 1))))
 
 

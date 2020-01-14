@@ -48,6 +48,8 @@ class OpenList:
             Object of type Node, with highest priority in open-list.
         """
         out = heapq.heappop(self.openlist)
+        self.g_tracker.remove(out.g)
+        heapq.heapify(self.g_tracker)
         return out
 
     def peek(self):
@@ -90,7 +92,6 @@ class OpenList:
             Exception if no node with provided state exists in open-list.
         """
         for other in self.openlist:
-            print(other.state, state)
             if other.state == state:
                 return other
         raise Exception("Node not found.")
@@ -109,7 +110,7 @@ class OpenList:
         state = self._node_to_state(obj)
         for i, x in enumerate(self.openlist):
             if x.state == state:
-                self.g_tracker.pop(self.g_tracker.index(x.g))
+                self.g_tracker.remove(x.g)
                 heapq.heapify(self.g_tracker)
                 self.openlist[i] = other
                 break
@@ -128,16 +129,14 @@ class OpenList:
             Exception if no node with specified state exists in
                 open-list.
         """
-
         state = self._node_to_state(obj)
-        for i in range(len(self.openlist)):
-            if self.openlist[i].state == state:
-                self.g_tracker.pop(self.g_tracker.index(self.openlist[i].g))
+        for i, x in enumerate(self.openlist):
+            if x.state == state:
+                self.g_tracker.remove(x.g)
                 heapq.heapify(self.g_tracker)
                 break
         else:
             raise Exception("Node not found.")
-
         self.openlist.pop(i)
         heapq.heapify(self.openlist)
 
