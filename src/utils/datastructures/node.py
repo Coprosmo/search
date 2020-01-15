@@ -37,6 +37,8 @@ class Node:
         self.action = action
         self.depth = parent.depth + 1 if parent else 0
         self.n_expanded = 0
+        self.expanded_once = False
+        self.expanded_nonce = False
 
     def expand(self, partial_expansion=False, gen_limit=None):
         """Expands node, to give all directly reachable children.
@@ -50,6 +52,8 @@ class Node:
                     self.G = self.g + cost
                     break
                 if self.g + cost == self.G:
+                    self.n_expanded += 1
+                    #if self.n_expanded == self.state.n_successors:
                     if i + 1 == self.state.n_successors:
                         self.G = None
                     yield state, self.g + cost
@@ -59,7 +63,7 @@ class Node:
         else:
             for state, cost in self.state.successors():
                 self.n_expanded += 1
-                yield state, cost
+                yield state, self.g + cost
 
     def path(self, reverse=False):
         """Gives the path from the initial state to node's state.

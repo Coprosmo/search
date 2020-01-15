@@ -1,6 +1,6 @@
 # bsharp.py
 
-__name__ = 'bsharp'
+__name__ = 'gpe_bsharp'
 __all__ = ['BSharpSearch']
 
 import functools
@@ -40,6 +40,10 @@ class BSharpSearch:
         self.settings = search_settings
         self.nodes_expanded = 0
         self.nodes_generated = 2
+        self.started_0_expansion = {-1: set(), 1: set()}
+        self.started_1_expansion = {-1: set(), 1: set()}
+        self.fractional_expansion = 0
+        self.expanded_this_layer = {-1: set(), 1: set()}
         self.removed = set()
         self.special_state = None
 
@@ -70,33 +74,37 @@ class BSharpSearch:
                 return
 
             self.split_fn(self.fLim - self.epsilon + 1)
-
+            self.expanded_this_layer = {-1: set(), 1: set()}
             self.expand_level()
+            # print(self.fLim, self.gLim, len(self.expanded_this_layer[-1]), len(self.expanded_this_layer[1]))
             if self.best == self.fLim:
                 return
-
             self.fLim += 1
         return
 
     def expand_level(self):
         expandable = self.get_expandable_nodes()
         while len(expandable) != 0:
-            # TODO: Make this peek the node, not remove
             n = expandable.pop()
             dir = n.direction
+            self.fractional_expansion -= (n.n_expanded / n.state.n_successors)
+
+            if n.n_expanded == 0 and not n.expanded_nonce:
+                self.started_0_expansion[dir].add(n.state.state)
+                self.expanded_this_layer[dir].add(n.state.state)
+                n.expanded_nonce = True
 
             for child_state, child_g in self.expand(n, gen_limit=(self.fLim - self.openlist[-1 * dir].min_g())):
-                # TODO: Change this to account for Zones 1,2 / 3
-                if child_g <= self.fLim - self.openlist[-1 * dir].min_g():
-                    pass
-
-
                 if child_state in self.closedlist[dir]:
                     continue
                 elif child_state in self.openlist[dir]:
                     prev_c_g = self.openlist[dir].get_g(child_state)
                     if child_g >= prev_c_g:
                         continue
+
+                if n.n_expanded == 1 and not n.expanded_once:
+                    self.started_1_expansion[dir].add(n.state.state)
+                    n.once_expanded = True
 
                 child_node = self.generate_child(child_state, parent=n)
                 if child_node.g < self.gLim[dir] and child_node.f <= self.fLim:
@@ -110,6 +118,7 @@ class BSharpSearch:
                     if self.best <= self.fLim:
                         return
 
+            self.fractional_expansion += (n.n_expanded / n.state.n_successors)
             if n.is_fully_expanded():
                 self.openlist[dir].remove(n)
                 self.closedlist[dir].append(n)
@@ -171,7 +180,10 @@ class BSharpSearch:
         sys.stdout = open(f'experiments/runs/{label}.out', 'w')
         print(f'Problem = {self.problem.initial}\n'
               f'Expanded = {self.nodes_expanded}\n'
+              f'Tried to expand = {len(self.started_0_expansion[1]) + len(self.started_0_expansion[-1])}\n'
+              f'Fractionally expanded = {self.fractional_expansion}\n'
               f'Generated = {self.nodes_generated}\n'
+              f'Generated at least one child = {len(self.started_1_expansion[1]) + len(self.started_1_expansion[-1])}\n'
               f'Open list size at end (fw) = {len(self.openlist[1])}\n'
               f'Open list size at end (bw) = {len(self.openlist[-1])}\n'
               f'Closed list size at end (fw) = {len(self.closedlist[1])}\n'

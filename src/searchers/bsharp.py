@@ -41,6 +41,8 @@ class BSharpSearch:
 
         self.nodes_expanded = 0
         self.nodes_generated = 2
+        self.started_0_expansion = {-1: set(), 1: set()}
+        self.expanded_this_layer = {-1: set(), 1: set()}
         self.removed = set()
 
     def bsharp(self):
@@ -70,7 +72,9 @@ class BSharpSearch:
                 return
 
             self.split_fn(self.fLim - self.epsilon + 1)
+            self.expanded_this_layer = {-1: set(), 1: set()}
             self.expand_level()
+            # print(self.fLim, self.gLim, len(self.expanded_this_layer[-1]), len(self.expanded_this_layer[1]))
             if self.best == self.fLim:
                 return
 
@@ -80,9 +84,13 @@ class BSharpSearch:
     def expand_level(self):
         expandable = self.get_expandable_nodes()
         while len(expandable) != 0:
-            # TODO: Make this peek the node, not remove
             n = expandable.pop()
             dir = n.direction
+
+            if n.n_expanded == 0 and not n.expanded_nonce:
+                self.started_0_expansion[dir].add(n.state.state)
+                self.expanded_this_layer[dir].add(n.state.state)
+                n.expanded_nonce = True
 
             for child_state, child_g in self.expand(n):
                 if child_state in self.closedlist[dir]:
@@ -163,6 +171,7 @@ class BSharpSearch:
         sys.stdout = open(f'experiments/runs/{label}.out', 'w')
         print(f'Problem = {self.problem.initial}\n'
               f'Expanded = {self.nodes_expanded}\n'
+              f'Tried expanding = {len(self.started_0_expansion[1]) + len(self.started_0_expansion[-1])}\n'
               f'Generated = {self.nodes_generated}\n'
               f'Open list size at end (fw) = {len(self.openlist[1])}\n'
               f'Open list size at end (bw) = {len(self.openlist[-1])}\n'
