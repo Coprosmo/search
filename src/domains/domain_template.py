@@ -15,14 +15,8 @@ Problem.__defaults__ = (1,)
 
 
 class DomainTemplate:
-    def __init__(self,
-                 bidirectional: 'Domain to be used for bidirectional purposes' = False):
-
-        if bidirectional:
-            Heuristic = namedtuple('Heuristic', 'fw bw')
-            self.heuristic = Heuristic(self.fw_heuristic, self.bw_heuristic)
-        else:
-            self.heuristic = self.fw_heuristic
+    def __init__(self):
+        pass
 
     @staticmethod
     def generate_problem(config):

@@ -16,8 +16,8 @@ from src.utils import datastructures as ds
 class BSharpSearch:
     def __init__(self, domain, heuristics, degradation, search_settings):
         self.domain = domain
-        self.heuristic_fw = functools.partial(heuristics[1], d=degradation)
-        self.heuristic_bw = functools.partial(heuristics[2], d=degradation)
+        self.heuristic_fw = functools.partial(heuristics[1], degradation=degradation)
+        self.heuristic_bw = functools.partial(heuristics[2], degradation=degradation)
         self.initial = None
         self.goal = None
         self.epsilon = None
@@ -118,18 +118,18 @@ class BSharpSearch:
                 self.nodes_expanded += 1
         return
 
-    def generate_child(self, c, parent):
-        temp_g = parent.g + self.domain.cost(parent.state, c)
+    def generate_child(self, child_state, parent):
+        temp_g = parent.g + self.domain.cost(parent.state, child_state, problem=self.problem)
         dir = parent.direction
-        if c in self.openlist[dir]:
-            self.openlist[dir].remove(c)
-        if c in self.closedlist[dir]:
-            self.closedlist[dir].remove(c)
+        if child_state in self.openlist[dir]:
+            self.openlist[dir].remove(child_state)
+        if child_state in self.closedlist[dir]:
+            self.closedlist[dir].remove(child_state)
 
         c_node = ds.Node(
-            state=c,
+            state=child_state,
             g=temp_g,
-            h=self.heuristic_fw(c) if dir == 1 else self.heuristic_bw(c),
+            h=self.heuristic_fw(child_state) if dir == 1 else self.heuristic_bw(child_state),
             direction=parent.direction,
             parent=parent
         )
@@ -161,7 +161,7 @@ class BSharpSearch:
         self.openlist[node.direction].remove(node)
         self.closedlist[node.direction].append(node)
         self.nodes_expanded += 1
-        return ((s, c) for s, c in node.expand())
+        return ((s, c) for s, c in node.expand(problem=self.problem))
 
     def write_out(self, label):
         solution_path = f'{self.collision_nodes[0].path()[:-1]} ' \
@@ -184,8 +184,8 @@ class BSharpSearch:
 
     def __call__(self, problem, label):
         self.problem = problem
-        self.heuristic_fw = functools.partial(self.heuristic_fw, goal=problem.goal)
-        self.heuristic_bw = functools.partial(self.heuristic_bw, goal=problem.initial)
+        self.heuristic_fw = functools.partial(self.heuristic_fw, goal=problem.goal, problem=problem)
+        self.heuristic_bw = functools.partial(self.heuristic_bw, goal=problem.initial, problem=problem)
 
         print('Starting bsharp')
         since = time.perf_counter()

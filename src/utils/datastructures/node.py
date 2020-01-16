@@ -40,14 +40,14 @@ class Node:
         self.expanded_once = False
         self.expanded_nonce = False
 
-    def expand(self, partial_expansion=False, gen_limit=None):
+    def expand(self, problem, partial_expansion=False, gen_limit=None):
         """Expands node, to give all directly reachable children.
 
         Returns:
             A generator object for the successors of node's state.
         """
         if partial_expansion == "g":
-            for i, (state, cost) in enumerate(self.state.successors()):
+            for i, (state, cost) in enumerate(self.state.successors(problem)):
                 if self.g + cost > gen_limit:
                     self.G = self.g + cost
                     break
@@ -61,7 +61,7 @@ class Node:
                     self.G = self.g + cost
                     break
         else:
-            for state, cost in self.state.successors():
+            for state, cost in self.state.successors(problem):
                 self.n_expanded += 1
                 yield state, self.g + cost
 

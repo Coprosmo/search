@@ -1,4 +1,7 @@
-"""Arbitrary-cost pancake domain.
+"""Arbitrary-cost-v2 pancake domain.
+
+Uses alternative cost/heuristic functions to version 1 of the
+arbitrary-pancake domain.
 
 Typical use:
 
@@ -55,7 +58,7 @@ class State:
                 first = [self.state[j] for j in range(i)]
                 second = [self.state[j] for j in range(len(self.state)-1, i-1, -1)]
                 new_state = State(tuple(first + second))
-                self.successors_list.append((new_state, cost(self, new_state, problem=problem)))
+                self.successors_list.append((new_state, cost(self, new_state, problem)))
             self.successors_list = sorted(self.successors_list, key=lambda x: x[1])
         return self.successors_list
 
@@ -140,8 +143,8 @@ def cost(state, other, problem):
     """Returns the cost of the operation of moving from one state to
     another.
 
-    Cost is calculated by counting the number of pancakes flipped in
-    the operation.
+    Cost is calculated to be the pancake 'under the spatula', or the
+    minimum index pancake which is not flipped.
 
     Args:
         state: Parent state.
@@ -155,7 +158,9 @@ def cost(state, other, problem):
     i = 0
     while state_1[i] == state_2[i] and i < len(state_1):
         i += 1
-    return len(state_1) - i
+    if i == len(state_1):
+        return 0
+    return state_1[i - 1]
 
 
 def _not_adjacent(p1, p2, state):
@@ -178,12 +183,15 @@ def _not_adjacent(p1, p2, state):
     return adj
 
 
-def largest_pancake_heuristic_fw(state, goal, degradation, problem):
-    """Forward direction 'Largest pancake' Heuristic function for the
+def min_side_heuristic_fw(state, goal, degradation, problem):
+    """Forward direction 'Min side' Heuristic function for the
     arbitrary-pancake domain.
 
-    Heuristic is calculated to be the weight of the largest pancake
-    which is out of place in a state, with respect to the goal state.
+    Heuristic is calculated as follows:
+
+        For every gap (two pancakes adjacent in a state which are
+            not adjacent in the goal state), increment the heuristic
+            value by the minimum of the two pancakes.
 
     Heuristic can be degraded by specifying an integer
     value 0 <= x <= 10, where 0 is perfect heuristic, and 10 is blind.
@@ -200,18 +208,26 @@ def largest_pancake_heuristic_fw(state, goal, degradation, problem):
     Returns:
         A non-negative integer value for the heuristic value of state.
     """
-    if state == goal:
+    s, g = state.state, goal.state
+    if s == g:
         return 0
-    stop_condition = len(goal.state) - math.floor((degradation / 10) * len(goal.state))
-    return state.state[max(i for i in range(1, stop_condition) if state.state[i] != goal.state[i])]
+    h = 0
+    stop_condition = (len(g)-1) - math.floor((degradation / 10) * len(g))
+    for i in range(stop_condition):
+        if _not_adjacent(s[i], s[i+1], g):
+            h += min(s[i], s[i+1])
+    return h
 
 
-def largest_pancake_heuristic_bw(state, goal, degradation, problem):
-    """Backward direction 'Largest Pancake' Heuristic function for the
+def min_side_heuristic_bw(state, goal, degradation, problem):
+    """Backward direction 'Min side' Heuristic function for the
     arbitrary-pancake domain.
 
-    Heuristic is calculated to be the weight of the largest pancake
-    which is out of place in a state, with respect to the goal state.
+    Heuristic is calculated as follows:
+
+        For every gap (two pancakes adjacent in a state which are
+            not adjacent in the goal state), increment the heuristic
+            value by the minimum of the two pancakes.
 
     Heuristic can be degraded by specifying an integer
     value 0 <= x <= 10, where 0 is perfect heuristic, and 10 is blind.
@@ -228,7 +244,7 @@ def largest_pancake_heuristic_bw(state, goal, degradation, problem):
     Returns:
         A non-negative integer value for the heuristic value of state.
     """
-    return largest_pancake_heuristic_fw(state, goal)
+    return min_side_heuristic_fw(goal, state, degradation, problem)
 
 
 def zero_heuristic(state, goal, degradation, problem):
@@ -246,9 +262,5 @@ def zero_heuristic(state, goal, degradation, problem):
     return 0
 
 
-heuristics = {"zero": (zero_heuristic,
-                       zero_heuristic,
-                       zero_heuristic),
-              "largest_pancake": (largest_pancake_heuristic_fw,
-                                  largest_pancake_heuristic_fw,
-                                  largest_pancake_heuristic_bw)}
+heuristics = {"zero": (zero_heuristic, zero_heuristic, zero_heuristic),
+              "min_side": (min_side_heuristic_fw, min_side_heuristic_fw, min_side_heuristic_bw)}

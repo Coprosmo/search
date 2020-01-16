@@ -18,11 +18,11 @@ def get_config():
     return helpers.parse_config(config_file)
 
 
-def get_domain(config):
+def get_domain_module(config):
     domain_name = config.settings['domain']
-    domain = importlib.import_module('domains.' + domain_name)
-    print('Domain: ', domain.__name__, end='\n\n')
-    return domain
+    domain_module = importlib.import_module('domains.' + domain_name)
+    print('Domain: ', domain_module.__name__, end='\n\n')
+    return domain_module
 
 
 def load_searching_algorithms(config):
@@ -52,7 +52,7 @@ def generate_searchers(problems, searchers, domain, config):
 
 def main():
     config = get_config()
-    domain = get_domain(config)
+    domain = get_domain_module(config)
     problems = domain.generate_problems(config)
     search_algs = load_searching_algorithms(config)
 
