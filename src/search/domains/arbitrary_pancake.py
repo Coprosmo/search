@@ -18,7 +18,7 @@ Problem.__defaults__ = (1,)
 
 
 class State:
-    """State class specific to unit-cost pancake domain.
+    """State class specific to arbitrary-cost pancake domain.
 
     Includes successor function, as well as hash and equality
     __methods.
@@ -235,8 +235,8 @@ def zero_heuristic(state, goal, degradation, problem):
     """Zero heuristic function.
 
     Args:
-        state: A state of unit-pancake domain.
-        goal: A state of unit-pancake domain.
+        state: A state of arbitrary-pancake domain.
+        goal: A state of arbitrary-pancake domain.
         degradation: Unused.
         problem: Unused.
 

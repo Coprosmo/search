@@ -3,7 +3,7 @@
 import importlib
 import sys
 
-from src.utils import helpers
+from src.search.utils import helpers
 
 
 
@@ -30,7 +30,7 @@ def load_searching_algorithms(config):
     for search_config in config.searchers:
         name = search_config["name"]
         searchers[name] = search_config
-        search_module = importlib.import_module('.searchers.' + search_config['searcher'], package='src')
+        search_module = importlib.import_module('.searchers.' + search_config['searcher'], package='src.search')
         for k in search_module.__dict__.keys():
             if k.endswith('Search'):
                 searchers[name]["searcher"] = search_module.__dict__[k]

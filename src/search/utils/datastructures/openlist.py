@@ -13,7 +13,7 @@ __all__ = ['OpenList']
 from math import inf
 import heapq
 
-from src.utils.datastructures.node import Node
+from .node import Node
 
 
 class OpenList:

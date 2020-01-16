@@ -8,7 +8,7 @@ import math
 import sys
 import time
 
-from src.utils import datastructures as ds
+from src.search.utils import datastructures as ds
 
 
 class AStarSearch:

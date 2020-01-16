@@ -4,13 +4,11 @@ __name__ = 'bsharp'
 __all__ = ['BSharpSearch']
 
 import functools
-import itertools
-import inspect
 from math import inf
 import sys
 import time
 
-from src.utils import datastructures as ds
+from src.search.utils import datastructures as ds
 
 
 class BSharpSearch:
