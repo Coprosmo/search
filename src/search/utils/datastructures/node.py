@@ -47,13 +47,14 @@ class Node:
             A generator object for the successors of node's state.
         """
         if partial_expansion == "g":
-            for i, (state, cost) in enumerate(self.state.successors(problem)):
+            successors = self.state.successors(problem)
+            for i in range(self.n_expanded, len(successors)):
+                state, cost = successors[i]
                 if self.g + cost > gen_limit:
                     self.G = self.g + cost
                     break
                 if self.g + cost == self.G:
                     self.n_expanded += 1
-                    #if self.n_expanded == self.state.n_successors:
                     if i + 1 == self.state.n_successors:
                         self.G = None
                     yield state, self.g + cost
