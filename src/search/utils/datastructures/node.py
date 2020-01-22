@@ -51,22 +51,24 @@ class Node:
         if partial_expansion == "g":
             successors = self.state.successors(problem)
             for i in range(self.n_expanded, len(successors)):
+                if self.is_fully_expanded():
+                    break
+
                 state, cost = successors[i]
-                if self.g + cost > gen_limit:
-                    self.G = self.g + cost
-                    break
-                if self.g + cost == self.G:
-                    self.n_expanded += 1
-                    if i + 1 == self.state.n_successors:
-                        self.G = None
-                    yield state, self.g + cost
-                    if self.is_fully_expanded():
+                temp_g = self.g + cost
+                if temp_g <= gen_limit:
+                    if temp_g == self.G:
+                        self.n_expanded += 1
+                        if i + 1 == self.state.n_successors:
+                            self.G = None
+                        yield state, temp_g
+                    elif temp_g > self.G:
+                        self.G = temp_g
                         break
-                if self.G is None:
-                    print('Breaking')
-                elif self.g + cost > self.G:
-                    self.G = self.g + cost
+                else:
+                    self.G = temp_g
                     break
+
         else:
             for state, cost in self.state.successors(problem):
                 self.n_expanded += 1
