@@ -219,6 +219,34 @@ def _min_edge_in(city, cities):
     return min(_dist(city, other) for other in cities if other != city)
 
 
+def _all_edges_between(cities):
+    edges = []
+    for i in range(len(cities) - 1):
+        for j in range(i + 1, len(cities)):
+            edges.append((_dist(cities[i].point, cities[j].point), cities[i].point, cities[j].point))
+    return edges
+
+
+def _mst(mst_cities):
+    edges = sorted(_all_edges_between(mst_cities), key=lambda x: x[0])
+    mst_set = set((city.point,) for city in mst_cities)
+    mst_weight = 0
+    for edgeweight, city_1, city_2 in edges:
+        for s in mst_set:
+            if city_1 in s:
+                s_1 = s
+            if city_2 in s:
+                s_2 = s
+        if s_1 is not s_2:
+            mst_weight += edgeweight
+            mst_set.remove(s_1)
+            mst_set.remove(s_2)
+            mst_set.add(s_1 + s_2)
+        if len(mst_set) == 1:
+            break
+    return mst_weight
+
+
 def edges_in_heuristic_fw(state, goal, degradation, problem):
     direction = -1
     h = 0
@@ -235,6 +263,21 @@ def edges_in_heuristic_bw(state, goal, degradation, problem):
         if visited == direction:
             h += _min_edge_in(city, cities=problem.statics[0])
     return h
+
+
+def mst_heuristic_fw(state, goal, degradation, problem):
+    direction = -1
+    mst_cities = [city for city in state.state if city.visited in [direction, 0]]
+    mst_cities.append(state.state[0])
+    return _mst(mst_cities)
+
+
+def mst_heuristic_bw(state, goal, degradation, problem):
+    direction = 1
+    mst_cities = [city for city in state.state if city.visited in [direction, 0]]
+    mst_cities.append(state.state[-1])
+    return _mst(mst_cities)
+
 
 def zero_heuristic(state, goal, degradation, problem):
     """Zero heuristic function.
@@ -255,5 +298,7 @@ def zero_heuristic(state, goal, degradation, problem):
 heuristics = {"zero": (zero_heuristic,
                        zero_heuristic),
               "edges_in": (edges_in_heuristic_fw,
-                           edges_in_heuristic_bw)
+                           edges_in_heuristic_bw),
+              "mst": (mst_heuristic_fw,
+                      mst_heuristic_bw)
 }
