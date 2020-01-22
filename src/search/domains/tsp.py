@@ -19,7 +19,16 @@ City = namedtuple('City', 'point visited')
 
 
 class State:
-    """State class specific to {domain name} domain.
+    """State class specific to TSP domain.
+
+    A TSP state is a list of cities accompanied by labels describing
+    whether or not a city has been visited, and whether a city is the
+    'current' city. A 1 or -1 (depending on direction in which state
+    is expanded) indicates that a city has been visited, and a label
+    of 0 shows a city as the current city.
+
+    The initial city is shown twice in a state, as a TSP solution
+    sees this city twice.
 
     Includes successor function, as well as hash and equality
     __ methods.
@@ -36,9 +45,6 @@ class State:
         self.state = state
         self.direction = direction
         self.n_successors = len([i for i in state if i.visited == -1*direction])
-        # TODO: check whether this is necessary
-        # if self.n_successors == len(self.state) - 1:
-        #     self.n_successors -= 1
         self.successors_list = None
 
     def successors(self, problem):
@@ -47,6 +53,11 @@ class State:
         Lazily calculates the successors. If function hasn't been
         called before, successors are calculated and stored.
         If stored list exists, it is simply retrieved.
+
+        Successors of a given state are the configurations of cities
+        which directly follow from the current state. The current city,
+        initially labelled 0, is relabelled to show that it has been
+        visited. The new current city is relabelled 0.
 
         Args:
             problem: namedtuple object as created in parse_problem().
@@ -66,10 +77,6 @@ class State:
 
             """ Get successor states, costs and append as (state, cost) to self.successors_list """
             for idx, city in enumerate(self.state):
-                # TODO: Check if this is necessary (see above)
-                # if idx in [0, len(self.state) - 1] and current_city_idx in [0, len(self.state) - 1]:
-                #     continue
-                # Check if city has been visited
                 if city.visited == -1*self.direction:
                     new_current_city_idx = idx
                     new_state = list(self.state)
