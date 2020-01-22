@@ -152,6 +152,7 @@ class BSharpSearch:
                         return
 
             self.fractional_expansion += (n.n_expanded / n.state.n_successors)
+
             if n.is_fully_expanded():
                 self.openlist[dir].remove(n)
                 self.closedlist[dir].append(n)

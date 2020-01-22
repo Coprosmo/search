@@ -146,10 +146,10 @@ class BSharpSearch:
                     if self.best <= self.fLim:
                         return
 
-            if n.is_fully_expanded():
-                self.openlist[dir].remove(n)
-                self.closedlist[dir].append(n)
-                self.nodes_expanded += 1
+            # if n.is_fully_expanded():
+            #     self.openlist[dir].remove(n)
+            #     self.closedlist[dir].append(n)
+            self.nodes_expanded += 1
         return
 
     def generate_child(self, child_state, parent):

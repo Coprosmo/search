@@ -2,10 +2,11 @@
 
 import importlib
 import sys
+import os
 
 from src.search.utils import helpers
 
-
+os.chdir('src/search')
 
 def get_heuristics(domain, search_conf):
     heuristics = domain.heuristics.get(search_conf['heuristic'], domain.heuristics['zero'])
@@ -14,13 +15,14 @@ def get_heuristics(domain, search_conf):
 
 def get_config():
     # TODO: replace this with command line arg
+    # config_file = 'src/search/experiments/example.conf'
     config_file = 'experiments/example.conf'
     return helpers.parse_config(config_file)
 
 
 def get_domain_module(config):
     domain_name = config.settings['domain']
-    domain_module = importlib.import_module('domains.' + domain_name)
+    domain_module = importlib.import_module('.domains.' + domain_name, package='src.search')
     print('Domain: ', domain_module.__name__, end='\n\n')
     return domain_module
 

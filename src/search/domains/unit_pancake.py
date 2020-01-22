@@ -11,9 +11,7 @@ from collections import namedtuple
 import math
 import random
 
-Problem = namedtuple('Problem', 'initial goal epsilon')
-
-Problem.__defaults__ = (1,)
+from src.search.utils.datastructures import Problem
 
 
 class State:

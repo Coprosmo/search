@@ -46,6 +46,8 @@ class Node:
         Returns:
             A generator object for the successors of node's state.
         """
+        if self.G is None:
+            print('Breaking!')
         if partial_expansion == "g":
             successors = self.state.successors(problem)
             for i in range(self.n_expanded, len(successors)):
@@ -58,6 +60,10 @@ class Node:
                     if i + 1 == self.state.n_successors:
                         self.G = None
                     yield state, self.g + cost
+                    if self.is_fully_expanded():
+                        break
+                if self.G is None:
+                    print('Breaking')
                 elif self.g + cost > self.G:
                     self.G = self.g + cost
                     break
@@ -97,7 +103,7 @@ class Node:
             A boolean value, True if node has been expanded, otherwise
                 False.
         """
-        return self.G is None
+        return self.G is None or self.n_expanded == self.state.n_successors
 
     def __hash__(self):
         """Gets hash value of node, based on state."""

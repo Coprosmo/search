@@ -14,10 +14,10 @@ from collections import namedtuple
 import math
 import random
 
+from src.search.utils.datastructures import Problem
 
-Problem = namedtuple('Problem', 'initial goal epsilon')
 
-Problem.__defaults__ = (1,)
+#Problem = namedtuple('Problem', 'initial goal epsilon')
 
 
 class State:
