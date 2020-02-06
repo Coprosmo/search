@@ -44,6 +44,7 @@ class BSharpSearch:
     """
     def __init__(self, domain, heuristics, degradation, search_settings):
         self.domain = domain
+        self.degradation = degradation
         self.heuristic_fw = functools.partial(heuristics[1], degradation=degradation)
         self.heuristic_bw = functools.partial(heuristics[2], degradation=degradation)
         self.initial = None
@@ -74,6 +75,8 @@ class BSharpSearch:
         self.fractional_expansion = 0
         self.expanded_this_layer = {-1: set(), 1: set()}
         self.removed = set()
+        self.zone_3_count = 0
+        self.total_count = 0
 
     def bsharp(self):
         """Main flow control for B# search"""
@@ -116,6 +119,9 @@ class BSharpSearch:
 
         Expandable nodes are those with g < gLim, and f <= fLim.
         """
+
+        self.zone_3_count = 0
+        self.total_count = 0
         expandable = self.get_expandable_nodes()
         while len(expandable) != 0:
             n = expandable.pop()
@@ -127,6 +133,8 @@ class BSharpSearch:
                 self.expanded_this_layer[dir].add(n.state.state)
                 n.expanded_nonce = True
 
+            gen_limit_1 = self.gLim[dir] + self.epsilon - 1
+            gen_limit_2 = self.fLim - self.openlist[-1 * dir].min_g()
             for child_state, child_g in self.expand(n, gen_limit=(self.fLim - self.openlist[-1 * dir].min_g())):
                 if child_state in self.closedlist[dir]:
                     continue
@@ -139,6 +147,9 @@ class BSharpSearch:
                     self.started_1_expansion[dir].add(n.state.state)
                     n.once_expanded = True
 
+                if self.gLim[dir] + self.epsilon - 1 < child_g <= self.fLim - self.openlist[-1 * dir].min_g():
+                    self.zone_3_count += 1
+                self.total_count += 1
                 child_node = self.generate_child(child_state, parent=n)
                 if child_node.g < self.gLim[dir] and child_node.f <= self.fLim:
                     expandable.add(child_node)
@@ -148,8 +159,8 @@ class BSharpSearch:
                     self.best = min(self.best, child_node.g + self.openlist[-1 * dir].get_g(child_state))
                     if old_best != self.best:
                         self.collision_nodes = (self.openlist[1].get(child_state), self.openlist[-1].get(child_state))
-                    if self.best <= self.fLim:
-                        return
+                    # if self.best <= self.fLim:
+                    #     return
 
             self.fractional_expansion += (n.n_expanded / n.state.n_successors)
 

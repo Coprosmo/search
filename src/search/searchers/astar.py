@@ -21,6 +21,7 @@ import sys
 import time
 
 from src.search.utils import datastructures as ds
+from src.search.utils.helpers import write_stats
 
 
 class AStarSearch:
@@ -43,6 +44,7 @@ class AStarSearch:
     def __init__(self, domain, heuristics, degradation, search_settings):
         """Initializing search object"""
         self.domain = domain
+        self.degradation = degradation
         self.openlist = ds.OpenList()
         self.closedlist = ds.ClosedList()
         self.problem = None
@@ -144,6 +146,16 @@ class AStarSearch:
               f'Expansion = {self.expand}\n'
               f'Weighting = {self.h_weighting}')
         sys.stdout = original_std
+
+        split_label = label.split('_')
+        split_label = split_label[:-2] + [split_label[-1]]
+        stats_label = '_'.join(split_label)
+        write_stats(f'experiments/runs/stats/{stats_label}',
+                    degradation=self.degradation,
+                    expanded=self.nodes_expanded,
+                    generated=self.nodes_generated,
+                    open_list_size_end=len(self.openlist),
+                    closed_list_size_end=len(self.closedlist))
 
     def __call__(self, problem, label):
         """Runs an instance of AStarSearch.

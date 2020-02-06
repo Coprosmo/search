@@ -56,6 +56,9 @@ class Node:
 
                 state, cost = successors[i]
                 temp_g = self.g + cost
+
+                # TODO: Fix this to check if <= gen_limit_1 OR (<= gen_limit_2 AND collides with opposite side)
+                #if self.do_generate(state, cost, gen_limit_1, gen_limit_2, opp_open):
                 if temp_g <= gen_limit:
                     if temp_g == self.G:
                         self.n_expanded += 1
@@ -106,6 +109,10 @@ class Node:
                 False.
         """
         return self.G is None or self.n_expanded == self.state.n_successors
+
+    def do_generate(self, child_state, child_g, gen_limit_1, gen_limit_2, opp_open):
+        return any((child_g <= gen_limit_1,
+                   child_g <= gen_limit_2 and child_state in opp_open))
 
     def __hash__(self):
         """Gets hash value of node, based on state."""

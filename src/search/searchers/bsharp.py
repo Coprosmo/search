@@ -46,6 +46,7 @@ class BSharpSearch:
     def __init__(self, domain, heuristics, degradation, search_settings):
         """Initializes search object"""
         self.domain = domain
+        self.degradation = degradation
         self.heuristic_fw = functools.partial(heuristics[1], degradation=degradation)
         self.heuristic_bw = functools.partial(heuristics[2], degradation=degradation)
         self.initial = None
@@ -143,13 +144,15 @@ class BSharpSearch:
                     self.best = min(self.best, child_node.g + self.openlist[-1 * dir].get_g(child_state))
                     if self.best != old_best:
                         self.collision_nodes = (self.openlist[1].get(child_state), self.openlist[-1].get(child_state))
-                    if self.best <= self.fLim:
-                        return
+                    # TODO: Check if this is necessary for unit/arbitrary cost domains
+                    # if self.best <= self.fLim:
+                    #     return
 
             # if n.is_fully_expanded():
             #     self.openlist[dir].remove(n)
             #     self.closedlist[dir].append(n)
-            self.nodes_expanded += 1
+            #self.nodes_expanded += 1
+
         return
 
     def generate_child(self, child_state, parent):

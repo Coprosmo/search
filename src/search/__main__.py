@@ -63,7 +63,7 @@ def main():
             label = label + f'p{i}'
             print(f'Starting search: {label} . . .')
             original_stdout = sys.stdout
-            #sys.stdout = open(f'experiments/runs/{label}.log', 'w')
+            sys.stdout = open(f'experiments/runs/{label}.log', 'w')
             searcher(problem, label)
             sys.stdout = original_stdout
             print(f'Finished!')
