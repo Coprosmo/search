@@ -137,7 +137,7 @@ class AStarSearch:
             label: A string containing the name of the file to write to.
         """
         original_std = sys.stdout
-        sys.stdout = open(f'experiments/runs/{label}.out', 'w')
+        sys.stdout = open(f'experiments/runs/human_stats/{label}.out', 'w')
         print(f'Expanded = {self.nodes_expanded}\n'
               f'Generated = {self.nodes_generated}\n'
               f'Solution length = {self.best}\n'
@@ -150,7 +150,7 @@ class AStarSearch:
         split_label = label.split('_')
         split_label = split_label[:-2] + [split_label[-1]]
         stats_label = '_'.join(split_label)
-        write_stats(f'experiments/runs/stats/{stats_label}',
+        write_stats(f'experiments/runs/stats/{stats_label}.csv',
                     degradation=self.degradation,
                     expanded=self.nodes_expanded,
                     generated=self.nodes_generated,

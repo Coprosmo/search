@@ -18,6 +18,7 @@ import sys
 import time
 
 from src.search.utils import datastructures as ds
+from src.search.utils.helpers import write_stats
 
 
 class BSharpSearch:
@@ -264,7 +265,7 @@ class BSharpSearch:
                         f'+ {(self.collision_nodes[0].g, self.collision_nodes[0].state.state)} ' \
                         f'+ {self.collision_nodes[1].path(reverse=True)[1:]}'
         original_std = sys.stdout
-        sys.stdout = open(f'experiments/runs/{label}.out', 'w')
+        sys.stdout = open(f'experiments/runs/human_stats/{label}.out', 'w')
         print(f'Problem = {self.problem.initial}\n'
               f'Expanded = {self.nodes_expanded}\n'
               f'Tried to expand = {len(self.started_0_expansion[1]) + len(self.started_0_expansion[-1])}\n'
@@ -279,6 +280,20 @@ class BSharpSearch:
               f'Solution path = {solution_path}\n'
               f'Heuristic = {self.heuristic_fw}')
         sys.stdout = original_std
+
+        split_label = label.split('_')
+        split_label = split_label[:-2] + [split_label[-1]]
+        stats_label = '_'.join(split_label)
+        write_stats(f'experiments/runs/stats/{stats_label}.csv',
+                    degradation=self.degradation,
+                    expanded=self.nodes_expanded,
+                    generated=self.nodes_generated,
+                    open_list_size_end=len(self.openlist[-1]) + len(self.openlist[1]),
+                    closed_list_size_end=len(self.closedlist[-1]) + len(self.openlist[1]),
+                    open_list_size_end_fw=len(self.openlist[1]),
+                    open_list_size_end_bw=len(self.openlist[-1]),
+                    closed_list_size_end_fw=len(self.closedlist[1]),
+                    closed_list_size_end_bw=len(self.closedlist[-1]))
 
     def __call__(self, problem, label):
         """Runs an instance of BSharpSearch.
