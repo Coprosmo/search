@@ -3,6 +3,7 @@
 import importlib
 import sys
 import os
+import shutil
 
 from src.search.utils import helpers
 
@@ -52,7 +53,18 @@ def generate_searchers(problems, searchers, domain, config):
             yield searcher(domain, heuristics, degradation, search_conf), label
 
 
+def setup_folders():
+    computer_stats = 'experiments/runs/stats'
+    human_readable_stats = 'experiments/runs/human_stats'
+    if os.path.exists(computer_stats):
+        shutil.rmtree(computer_stats)
+    if os.path.exists(human_readable_stats):
+        shutil.rmtree(human_readable_stats)
+    os.makedirs(computer_stats)
+    os.makedirs(human_readable_stats)
+
 def main():
+    setup_folders()
     config = get_config()
     domain = get_domain_module(config)
     problems = domain.generate_problems(config)
