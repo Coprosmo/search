@@ -19,6 +19,7 @@ import time
 
 from src.search.utils import datastructures as ds
 from src.search.utils.helpers import write_stats
+from src.search.utils.visualization import hex_distribution
 
 
 class BSharpSearch:
@@ -75,6 +76,7 @@ class BSharpSearch:
         self.nodes_generated = 2
         self.started_0_expansion = {-1: set(), 1: set()}
         self.expanded_this_layer = {-1: set(), 1: set()}
+        self.g_vs_cost_record = list()
 
     def bsharp(self):
         """Main flow control for B# search"""
@@ -183,6 +185,8 @@ class BSharpSearch:
 
         self.nodes_generated += 1
         self.openlist[dir].append(c_node)
+
+        self.g_vs_cost_record.append((temp_g - parent.g, temp_g))
         return c_node
 
     def get_expandable_nodes(self):
@@ -275,6 +279,13 @@ class BSharpSearch:
                     open_list_size_end_bw=len(self.openlist[-1]),
                     closed_list_size_end_fw=len(self.closedlist[1]),
                     closed_list_size_end_bw=len(self.closedlist[-1]))
+        temp = []
+        with open(f'experiments/runs/stats/{label}_gcount', 'w') as f:
+            for cost, g in self.g_vs_cost_record:
+                f.write(f'{cost}:{g},')
+                temp.append(f'{cost}:{g},')
+        hex_distribution(''.join(temp))
+
 
     def __call__(self, problem, label):
         """Runs an instance of BSharpSearch.
