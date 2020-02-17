@@ -63,6 +63,7 @@ def setup_folders():
     os.makedirs(computer_stats)
     os.makedirs(human_readable_stats)
 
+
 def main():
     setup_folders()
     config = get_config()

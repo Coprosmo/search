@@ -284,7 +284,7 @@ class BSharpSearch:
             for cost, g in self.g_vs_cost_record:
                 f.write(f'{cost}:{g},')
                 temp.append(f'{cost}:{g},')
-        hex_distribution(''.join(temp))
+        #hex_distribution(''.join(temp))
 
 
     def __call__(self, problem, label):
